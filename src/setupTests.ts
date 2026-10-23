@@ -19,4 +19,5 @@ window.matchMedia = (query: string): MediaQueryList =>
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
+  window.localStorage.clear();
 });

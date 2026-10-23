@@ -1,4 +1,5 @@
 import { screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { Route, Routes } from "react-router";
 import { describe, expect, it } from "vitest";
 import { renderWithProviders } from "@/test/render";
@@ -28,5 +29,23 @@ describe("Layout", () => {
       "/realms",
     );
     expect(screen.getByText("overview content")).toBeInTheDocument();
+  });
+});
+
+describe("Layout dark mode", () => {
+  it("defaults to dark mode and toggles it with the switch", async () => {
+    const user = userEvent.setup();
+    renderLayout();
+
+    const toggle = screen.getByRole("switch", { name: /dark mode/i });
+    expect(document.documentElement).toHaveClass("dark");
+    expect(toggle).toBeChecked();
+
+    await user.click(toggle);
+    expect(document.documentElement).not.toHaveClass("dark");
+    expect(toggle).not.toBeChecked();
+
+    await user.click(toggle);
+    expect(document.documentElement).toHaveClass("dark");
   });
 });
