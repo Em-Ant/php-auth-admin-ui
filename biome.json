@@ -30,7 +30,7 @@
   },
   "overrides": [
     {
-      "includes": ["src/components/ui/**", "src/hooks/**", "src/lib/**"],
+      "includes": ["src/shared/ui/**", "src/shared/lib/**"],
       "assist": { "enabled": false },
       "formatter": { "enabled": false },
       "linter": { "enabled": false }

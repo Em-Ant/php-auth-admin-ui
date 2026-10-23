@@ -1,5 +1,5 @@
 import { vi } from "vitest";
-import { appApiClient, rawApiClient } from "../api/utils";
+import { appApiClient, rawApiClient } from "@/shared/api";
 
 /**
  * Spies on the authenticated clients. A test mocks at this boundary so the

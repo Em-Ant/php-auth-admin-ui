@@ -2,7 +2,7 @@ import { render } from "@testing-library/react";
 import type { ReactElement } from "react";
 import { Provider } from "react-redux";
 import { MemoryRouter } from "react-router";
-import { type AppStore, createAppStore } from "../store/store";
+import { type AppStore, createAppStore } from "@/app/store/store";
 
 interface RenderWithProvidersOptions {
   /** Pass one store to assert against it after the interaction. */

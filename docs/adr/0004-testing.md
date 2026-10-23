@@ -59,7 +59,7 @@ it meaningfully, do not duplicate it as a hook test.
 mock the **API boundary** (`appApiClient` / `rawApiClient`, or `fetch`), not
 thunks, reducers or selectors, so the real store transitions and the real
 loader wiring execute. Session concerns (`bootstrap`, `isAuthenticated`,
-`hasRole`) are mocked at the auth boundary, as `src/routes.test.tsx` does.
+`hasRole`) are mocked at the auth boundary, as `src/app/routes.test.tsx` does.
 Fixtures use the shapes from the API contract, including the
 `{items,total,limit,offset}` envelope. A feature flow is considered covered when
 the test starts from its route, loads data, exercises the main user actions and
@@ -85,7 +85,8 @@ asserts the resulting UI and store state.
 - Integration tests catch router, loader, store and component wiring mistakes
   that unit tests structurally cannot see.
 - Mocking the API means contract drift is not caught here. The hand-maintained
-  types in `src/api/contract.ts` and the backend's own tests are the guard.
+  types in `src/shared/api/contract.ts` and the backend's own tests are the
+  guard.
 - TDD costs time up front and pays back in fewer debug cycles; reviewers should
   expect tests in the same change as the behaviour.
 - Component tests that assert accessibility names double as a check that the UI

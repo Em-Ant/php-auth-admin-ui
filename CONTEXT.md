@@ -47,3 +47,17 @@ _Avoid_: Audit event, history row
 **Operator**:
 The person using this dashboard, authenticated in the admin realm with the admin role. Distinct from the Users being administered.
 _Avoid_: Admin user, viewer
+
+### Actions
+
+**Deactivate**:
+The reversible switch that stops a User from authenticating while its row and history remain. Distinct from delete, which is guarded and irreversible.
+_Avoid_: Disable, suspend, archive
+
+**Revoke**:
+The end of a Session or an Offline session, recorded by its status becoming EXPIRED; the row survives and stays listable.
+_Avoid_: Delete, terminate, kill
+
+**Invalidate**:
+A bulk Revoke applied to every Session and Offline session matching a User and/or a Client. Not a per-resource action.
+_Avoid_: Revoke all, purge, force logout

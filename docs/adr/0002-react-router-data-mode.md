@@ -15,31 +15,33 @@ all server state (ADR-0003). React Router 7 supports declarative routing
 ## Decision
 
 Use React Router in **data mode**: `createBrowserRouter` plus `RouterProvider`,
-configured from route objects in `src/routes.tsx`.
+configured from route objects in `src/app/routes.tsx`.
 
 - **Basename** comes from `import.meta.env.BASE_URL`, because the app is served
   under `/admin-ui/`.
 - **Bootstrapping** happens in the root route loader: runtime config is
   fetched and Keycloak initialized exactly once through the memoized promise
-  in `src/bootstrap/index.ts`; the signed-in user is then hydrated into the
-  `user` slice.
+  in `src/app/bootstrap.ts`; the signed-in operator is then hydrated into the
+  `app/model/operator` slice.
 - **Guards** are loaders, not effects. A pathless layout route runs
   `requireAdmin`, which returns a `redirect()` to `/login?from=…` or
   `/forbidden` before the protected route renders. Protected data routes are
   additionally wrapped individually (see below).
-- **Data loaders are app-owned and dispatch, they do not return data.** A
-  protected route's loader is composed as bootstrap → admin guard → data
-  loader. The data loader reads pagination/filters from `request.url`,
-  dispatches its entity thunk and returns `null`. The slice owns loading, error
-  and pagination state; the page renders selectors and its skeleton. See
-  ADR-0003.
+- **Data loaders are page-owned; the route table composes them.** Each screen
+  keeps its loader in its page slice, next to the view that renders the data.
+  The app composes a protected route as bootstrap → admin guard → page loader,
+  so a page never imports the app layer for bootstrap or auth. The page loader
+  reads pagination/filters from `request.url`, dispatches its entity thunk and
+  returns `null`. The slice owns loading, error and pagination state; the page
+  renders selectors and its skeleton. See ADR-0003.
 - **A loader does not read other slices.** If the request depends on state
   owned by another slice, the loader dispatches a thunk that resolves the value
   through that slice's selector. It never calls `store.getState()` at the
   dispatch site (ADR-0003).
 - **The login action** dispatches `requestLogin`, which redirects the browser
-  to the backend-served login page. The login loader sends an already
-  authenticated operator back into the app.
+  to the backend-served login page. The login page's own loader sends an
+  already authenticated operator back into the app; the route table wraps it
+  with bootstrap.
 - **URL search params are the request; the slice holds the applied result.**
   `limit`/`offset` and filters live in the URL. Loaders read them and dispatch
   the fetch; the slice stores the `limit`/`offset` the API echoed back, and the
@@ -49,7 +51,8 @@ configured from route objects in `src/routes.tsx`.
 - **Code splitting** uses route `lazy` when screens are added, so each screen
   loads with its own chunk.
 - **Loader/action failures** render the root route's `errorElement`
-  (`src/pages/ErrorPage.tsx`) instead of the default development error screen.
+  (`src/app/error/ErrorPage.tsx`) instead of the default development error
+  screen.
   It shows the message and offers reload/home without leaking a stack trace.
 
 Declarative mode and framework/SSR mode are both rejected for now.

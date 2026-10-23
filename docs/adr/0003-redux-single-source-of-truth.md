@@ -41,9 +41,12 @@ entity slice keeps `api.ts` (endpoint calls), `slice.ts` (state and thunks),
 `selectors.ts`, a public `index.ts` and colocated tests; pages and components
 import it only through `index.ts`.
 
-Session and bootstrap state belong to the app layer. The current
-`features/user` slice is a documented pre-FSD exception: it stays where it is
-until an app layer exists, and pages read it directly in the meantime.
+Session and bootstrap state belong to the app layer: the signed-in operator
+is `app/model/operator`, never an entity, and it stays distinct from
+`entities/session` (an administered user's SSO session). Pages read the
+operator from the shell's outlet context rather than importing the app slice.
+The typed store hooks live in `shared/lib` and import the root-state types
+only, so no lower layer has a runtime dependency on `app`.
 
 ## Store rules
 
@@ -60,6 +63,10 @@ into slice state directly.
   into a list, deriving a field, pruning stale entries — extract a named pure
   helper next to the slice, unit-test it, and call it from the reducer. The
   reducer stays readable and the logic stays testable without a store.
+- **Listeners are registered by the composition root.** A slice exports a
+  `registerXListeners(listen)` function that receives the typed listening API;
+  `app/store` calls it at startup. A slice never imports the store instance or
+  the listener middleware.
 - **Cross-slice reads belong in a thunk.** If an update needs data from
   another slice, the thunk reads it from `getState()` through that slice's
   selector. Do not read slice A at the dispatch site and pass a copy of its
@@ -71,7 +78,7 @@ into slice state directly.
   DOM nodes, functions, class instances or component references in the store.
 - **The dependency points from UI to store.** Slices, thunks and selectors may
   import API clients, runtime config and auth helpers; they must not import
-  React, React Router or anything from `src/pages` or `src/components`. A
+  React, React Router or anything from `src/pages` or `src/shared/ui`. A
   screen can be deleted without touching the store, and the store can be
   exercised in a test without rendering a component.
 

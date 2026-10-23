@@ -82,25 +82,24 @@ target different backends. It is copied into `dist/` as-is.
 - **API calls:** a typed fetch pipeline handles the base URL, the bearer token,
   a 401 refresh plus one retry, and the backend's
   `{ "error", "error_description" }` envelope. Contract types live in
-  [`src/api/contract.ts`](src/api/contract.ts).
+  [`src/shared/api/contract.ts`](src/shared/api/contract.ts).
 
 ## Project layout
 
-The project follows Feature-Sliced Design. The current tree still has a few
-root-level folders from the initial scaffold; new code follows the layers and
-existing code moves as its slice is touched.
+The project follows Feature-Sliced Design (ADR-0001). `widgets/`,
+`features/` and `entities/` appear when their first slice does; nothing is
+scaffolded ahead of the code that needs it.
 
 ```
 src/
-  api/          contract types and the typed fetch pipeline
-  bootstrap/    runtime config, Keycloak init, auth helpers
-  components/   shared components, including the vendored shadcn UI kit
-  features/     feature slices (state, listeners, UI)
-  hooks/        shared hooks
-  lib/          small framework-agnostic helpers
-  pages/        route-level screens
-  shared/       shared utilities
-  store/        store, reducers, listener wiring
+  app/          entry, router, store, operator model, layout, error boundary
+  pages/        route-level screens (overview, login, forbidden, not-found)
+  shared/
+    api/        contract types and the typed fetch pipeline
+    auth/       Keycloak adapter and the admin role constant
+    config/     runtime config.json loading
+    lib/        small helpers, hooks and typed store hooks
+    ui/         vendored shadcn UI kit, Loader and Placeholder
   test/         test-only helpers (render, store factory, API spies)
 ```
 

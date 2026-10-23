@@ -38,10 +38,14 @@ shared`. A lower layer never imports a higher one, and slices at the same layer
 never import each other's internals — only through the public entry point. No
 empty layers: a folder appears when its first slice does.
 
-The current tree predates a full split (`src/api`, `src/store` and
-`src/bootstrap` still sit at the root). New code follows the layers above;
-existing code moves as its slice is touched. Do not restructure unrelated code
-in a feature change.
+The tree follows those layers with no root-level catch-alls: `app/` (entry,
+router, store, the operator model, layout and error boundary), `pages/` (one
+folder per screen), `shared/` (`api`, `auth`, `config`, `lib`, `ui`) and
+`src/test/` as test-only tooling outside the layers. `widgets/`, `features/`
+and `entities/` appear when their first slice does — a layer folder is never
+created empty, and a slice is never scaffolded ahead of the code that needs it.
+When an existing unit must move, move it with the change that needs it rather
+than restructuring unrelated code.
 
 ### Engineering style
 
@@ -89,15 +93,14 @@ working rules rather than slogans.
 | Application state | Redux Toolkit 2 + React Redux 9 | Single source of truth for session and server data; ADR-0003. RTK Query is deliberately absent. |
 | Authentication | `keycloak-js` 26 | The backend already implements Keycloak-compatible OIDC. PKCE `S256`, `onLoad: check-sso`, login iframe disabled. Access and refresh tokens stay in memory; `offline_access` is never requested. The login form is served by the backend, not built here. |
 | Runtime config | `public/config.json`, fetched at boot via `import.meta.env.BASE_URL` | One build can point at different backends; changing a URL does not require a rebuild. |
-| Component library | shadcn/ui (style `radix-nova`, neutral, CSS variables) | Components are vendored source under `src/components/ui`, so they can be edited and are not a runtime dependency on a design system. |
+| Component library | shadcn/ui (style `radix-nova`, neutral, CSS variables) | Components are vendored source under `src/shared/ui`, so they can be edited and are not a runtime dependency on a design system. |
 | Primitives | `radix-ui` umbrella package | What the shadcn components import; accessible behaviour is not reimplemented. |
-| Styling | Tailwind CSS 4 via `@tailwindcss/vite`, `tw-animate-css` | CSS-first Tailwind 4 setup; theme tokens live in `src/index.css`. |
+| Styling | Tailwind CSS 4 via `@tailwindcss/vite`, `tw-animate-css` | CSS-first Tailwind 4 setup; theme tokens live in `src/app/styles/index.css`. |
 | Class helpers | `class-variance-authority`, `cn` | Shadcn conventions for variants and class merging. |
 | Fonts | `@fontsource-variable/geist` | Self-hosted variable font, no external font request. |
-| Icons | `lucide-react` | Shadcn default, tree-shakeable. `react-icons` remains installed from the base but is unused. |
-| Toasts and theme | `sonner`, `next-themes` | Installed for the shadcn `Toaster` and theme tokens; neither is wired into the shell yet (no `<Toaster />` or theme provider). |
+| Icons | `lucide-react` | Shadcn default, tree-shakeable. |
 | HTTP layer | Custom `typedFetch` → `withBaseUrl` → `withAuth`, with `rexult` `Result` | One pipeline for every call: absolute/relative URLs, the `Authorization` header, 401 refresh plus a single retry, and mapping of the php-auth `{error, error_description}` envelope. Failures are values, not exceptions (abort is the exception). |
-| API types | Hand-maintained `src/api/contract.ts` | The backend contract is documented, not generated; types are updated when the contract changes. |
+| API types | Hand-maintained `src/shared/api/contract.ts` | The backend contract is documented, not generated; types are updated when the contract changes, one type per resource in the single contract module. |
 | Lint/format | Biome 2 | One tool for both; generated shadcn components and hooks are excluded from its rules. |
 | Tests | Vitest 4, Testing Library, jest-dom, jsdom | Fast unit/component tests, colocated with source; `src/setupTests.ts` owns global stubs such as `matchMedia`. See ADR-0004. |
 
