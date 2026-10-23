@@ -18,8 +18,8 @@ export const Login = () => (
         </div>
         <CardTitle>Sign in to Admin UI</CardTitle>
         <CardDescription>
-          The admin realm serves the login form. You will be redirected to the
-          backend, then brought back here.
+          You will be redirected to the backend login form, then brought back
+          here.
         </CardDescription>
       </CardHeader>
       <CardContent>

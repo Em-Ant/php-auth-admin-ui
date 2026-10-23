@@ -1,4 +1,4 @@
-import type { KeycloakConfig } from "keycloak-js";
+import type { KeycloakServerConfig } from "keycloak-js";
 // Import the client module, not the composed `@/shared/api` entry: that entry
 // depends on this module for the base URL, which would close a cycle.
 import { rawApiClient } from "@/shared/api/apiClient";
@@ -9,7 +9,7 @@ export interface AppConfig {
 }
 
 export interface Config {
-  auth: KeycloakConfig;
+  auth: KeycloakServerConfig;
   app: AppConfig;
 }
 

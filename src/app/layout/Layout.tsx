@@ -1,6 +1,8 @@
-import { ChevronsUpDown, LogOut, ShieldCheck } from "lucide-react";
+import { ChevronsUpDown, LogIn, LogOut, ShieldCheck } from "lucide-react";
+
 import { Link, Outlet, useLocation } from "react-router";
 import {
+  requestLogin,
   requestLogout,
   selectOperatorName,
   selectOperatorRoles,
@@ -8,7 +10,7 @@ import {
 import { useTheme } from "@/app/model/theme";
 import { useAppDispatch, useAppSelector } from "@/shared/lib";
 import { Avatar, AvatarFallback } from "@/shared/ui/avatar";
-import { Badge } from "@/shared/ui/badge";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -107,44 +109,55 @@ export const Layout = () => {
           </SidebarContent>
           <SidebarFooter>
             <SidebarMenu>
-              <SidebarMenuItem>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <SidebarMenuButton size="lg" tooltip={name ?? "Signed in"}>
-                      <Avatar className="size-8">
-                        <AvatarFallback>{getInitials(name)}</AvatarFallback>
-                      </Avatar>
-                      <div className="grid flex-1 text-left text-sm leading-tight">
-                        <span className="truncate font-medium">
-                          {name ?? "Signed in"}
-                        </span>
-                        <span className="truncate text-xs text-muted-foreground">
-                          {roles.join(", ") || "no roles"}
-                        </span>
-                      </div>
-                      <ChevronsUpDown className="ml-auto" />
-                    </SidebarMenuButton>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent
-                    side="right"
-                    align="end"
-                    sideOffset={8}
-                    className="min-w-56"
-                  >
-                    <DropdownMenuLabel className="truncate">
-                      {name ?? "Signed in"}
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      variant="destructive"
-                      onSelect={() => dispatch(requestLogout())}
+              {name ? (
+                <SidebarMenuItem>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <SidebarMenuButton size="lg" tooltip={name}>
+                        <Avatar className="size-8">
+                          <AvatarFallback>{getInitials(name)}</AvatarFallback>
+                        </Avatar>
+                        <div className="grid flex-1 text-left text-sm leading-tight">
+                          <span className="truncate font-medium">{name}</span>
+                          <span className="truncate text-xs text-muted-foreground">
+                            {roles.join(", ") || "no roles"}
+                          </span>
+                        </div>
+                        <ChevronsUpDown className="ml-auto" />
+                      </SidebarMenuButton>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      side="right"
+                      align="end"
+                      sideOffset={8}
+                      className="min-w-56"
                     >
-                      <LogOut />
-                      Log out
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </SidebarMenuItem>
+                      <DropdownMenuLabel className="truncate">
+                        {name}
+                      </DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        variant="destructive"
+                        onSelect={() => dispatch(requestLogout())}
+                      >
+                        <LogOut />
+                        Log out
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </SidebarMenuItem>
+              ) : (
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    size="lg"
+                    onClick={() => dispatch(requestLogin())}
+                    tooltip="Log in"
+                  >
+                    <LogIn />
+                    <span>Log in</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
             </SidebarMenu>
           </SidebarFooter>
           <SidebarRail />
@@ -162,7 +175,6 @@ export const Layout = () => {
               checked={isDark}
               onCheckedChange={toggle}
             />
-            <Badge variant="outline">admin realm</Badge>
           </header>
           <div className="flex flex-1 flex-col gap-4 p-4 md:p-6">
             <Outlet context={{ name, roles } satisfies OperatorOutletContext} />

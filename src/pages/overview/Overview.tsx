@@ -89,16 +89,13 @@ export const Overview = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <UserRound className="size-4" />
-              Signed in
+              {name ? "Signed in" : "Logged out"}
             </CardTitle>
-            <CardDescription>
-              Decoded from the admin realm access token.
-            </CardDescription>
+            <CardDescription>Decoded from the access token.</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
             <div>
-              <p className="text-sm font-medium">{name ?? "unknown"}</p>
-              <p className="text-xs text-muted-foreground">admin realm</p>
+              <p className="text-sm font-medium">{name ?? "Logged out"}</p>
             </div>
             <div className="flex flex-wrap gap-1">
               {roles.length > 0 ? (
