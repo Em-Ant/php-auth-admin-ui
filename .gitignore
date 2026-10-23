@@ -23,3 +23,8 @@ coverage
 *.njsproj
 *.sln
 *.sw?
+
+# Transient files written by engineering skills
+.tmp/
+
+.freebuff
