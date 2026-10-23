@@ -7,8 +7,8 @@ log through the `/admin/*` API.
 **Status:** the application shell is initialised — runtime config, Keycloak
 login, admin-guarded routes, sidebar layout and the documented screen routes.
 The domain screens are placeholders and are built next. The backend and wire
-format are described in the handoff docs under
-[`.scratch/admin-ui/`](.scratch/admin-ui/README.md).
+format are described in the handoff doc
+[`API-CONTRACT`](.scratch/admin-ui/API-CONTRACT.md).
 
 ## Requirements
 
@@ -107,13 +107,10 @@ src/
 ## Documentation
 
 - **Domain glossary:** [`CONTEXT.md`](CONTEXT.md) — the canonical terms (Realm, Client, User, Role, Session, Login, Offline session, Scope, Scope-role mapping, Audit entry, Operator).
-- **Handoff docs (kept at `.scratch/admin-ui/`):**
-  [`README`](.scratch/admin-ui/README.md),
-  [`GETTING-STARTED`](.scratch/admin-ui/GETTING-STARTED.md),
-  [`API-CONTRACT`](.scratch/admin-ui/API-CONTRACT.md),
-  [`DOMAIN-MODEL`](.scratch/admin-ui/DOMAIN-MODEL.md). These are the source of
-  truth for the wire format and contain dev-only credentials. They currently
-  live under the scratch folder and are not an issue-tracker ticket.
+- **API contract:** [`API-CONTRACT.md`](.scratch/admin-ui/API-CONTRACT.md) — every
+  endpoint, payload, response shape, error slug, filter and delete guard. It is
+  the source of truth for the wire format, and lives under the scratch folder
+  because it is reference material, not an issue-tracker ticket.
 - **Architecture decisions:** [`docs/adr/`](docs/adr/)
   - [0001 — Architecture and engineering conventions](docs/adr/0001-architecture-and-conventions.md)
   - [0002 — React Router data mode](docs/adr/0002-react-router-data-mode.md)

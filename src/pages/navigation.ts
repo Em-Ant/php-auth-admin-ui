@@ -23,9 +23,9 @@ export interface NavGroup {
 }
 
 /**
- * Navigation follows the screen map in admin-ui/DOMAIN-MODEL.md §6:
- * everything hangs off a realm, and the three session-shaped resources get
- * their own entries because they answer different questions.
+ * Navigation follows the domain hierarchy: everything hangs off a realm, and
+ * the three session-shaped resources get their own entries because they
+ * answer different questions.
  */
 export const NAV_GROUPS: NavGroup[] = [
   {

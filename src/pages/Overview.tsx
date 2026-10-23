@@ -22,7 +22,7 @@ interface ProbeState {
 }
 
 /**
- * Sanity check from admin-ui/GETTING-STARTED.md §1: /health is liveness and
+ * Sanity check from admin-ui/API-CONTRACT.md §6: /health is liveness and
  * /ready touches the database. Both are public, so they go through the raw
  * client instead of the authenticated one.
  */

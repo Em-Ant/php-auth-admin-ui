@@ -3,13 +3,12 @@
 **Status**: as implemented on the backend at commit `006ff4b`. Every field below was read out
 of the controller source, not out of a design doc.
 
-**Audience**: whoever builds the React + Vite + shadcn admin dashboard in the separate repo.
-This file is the single source of truth for the wire format. If the frontend needs a field
-that is not listed here, it does not exist yet — ask, do not guess.
+**Audience**: whoever builds the dashboard screens in this repo. This file is the single
+source of truth for the wire format. If the frontend needs a field that is not listed here,
+it does not exist yet — ask, do not guess.
 
-**Start with [README.md](README.md)** in this folder. For setup and credentials see
-[GETTING-STARTED.md](GETTING-STARTED.md); for entity semantics, the delete-guard rules, and
-the exact enum values see [DOMAIN-MODEL.md](DOMAIN-MODEL.md).
+For domain vocabulary see [`CONTEXT.md`](../../CONTEXT.md) at the repo root; for setup and the
+dev credentials see [`README.md`](../../README.md).
 
 **Backend repo**: `php-auth`. **Backend base URL** (dev): `http://localhost:8000`.
 **Frontend dev origin**: `http://localhost:5173` (already seeded as the `admin-ui` client URI).
@@ -112,7 +111,7 @@ Only needed for non-browser clients or for debugging with curl. In a browser, sk
 | Step | Request |
 |---|---|
 | 1. Authorize | `GET /realms/admin/protocol/openid-connect/auth?client_id=admin-ui&response_type=code&scope=openid%20profile%20email&redirect_uri=<registered>&state=<random>&nonce=<random>&code_challenge=<S256 of verifier>&code_challenge_method=S256` |
-| 2. User authenticates | `POST /realms/admin/protocol/openid-connect/login-actions/authenticate?q={login_id}`, form-encoded `emailemail`, `password`, `csrf_token` — all from`csrf_token` — all from the HTMLHTML formform servedserved inin step 1, with that step's cookies, with that step's cookies |
+| 2. User authenticates | `POST /realms/admin/protocol/openid-connect/login-actions/authenticate?q={login_id}`, form-encoded `email`, `password`, `csrf_token` — all taken from the HTML form served in step 1, with that step's cookies |
 | 3. Exchange code | `POST /realms/admin/protocol/openid-connect/token`, form-encoded `grant_type=authorization_code`, `code`, `redirect_uri`, `client_id=admin-ui`, `code_verifier` |
 | 4. Call admin API | `Authorization: Bearer <access_token>` |
 
@@ -125,9 +124,7 @@ need a reference implementation.
 
 Also useful, no auth needed: `GET /realms/admin/.well-known/openid-configuration` and
 `GET /realms/admin/protocol/openid-connect/certs` (the JWKS, for decoding the token locally
-sothe token locally
-so you cancan read the admin rolethe admin role client-side instead of calling the API to find out who you
-
+so you can read the admin role client-side instead of calling the API to find out who you
 are).
 
 ---
@@ -209,6 +206,11 @@ Beyond `limit`/`offset`, these query params are supported per endpoint. They com
 > fragment matches nothing. Matching is ASCII case-insensitive (SQLite `LIKE` default); there
 > is no Unicode case folding. `%`, `_` and `\` in the term match literally. Terms over 128
 > chars are truncated. Combines with `realm_id` (AND) and pagination as usual.
+>
+> **Filter values are not validated.** An unrecognised `action`, `actor_type`, `target_type`
+> or date is not rejected — it silently falls back to its default rather than returning a
+> `400`. Do not invent values for dropdowns, and treat an unexpectedly empty or broad result
+> as a bad filter value first.
 
 ### Value formats
 
@@ -219,6 +221,23 @@ Beyond `limit`/`offset`, these query params are supported per endpoint. They com
 - Booleans on write accept `true`/`false`, `1`/`0`, `"true"`/`"false"`. Anything else is a
   `400`. A value that is not a recognised boolean never gets coerced.
 - All ids are UUID strings.
+
+### What blocks a delete
+
+A guard counts **active** rows only: expired logins, sessions and offline sessions never block
+a delete. The full set:
+
+| Action | `409` while |
+|---|---|
+| `DELETE /admin/realms/{id}` | the realm has any client or any user (roles are not checked) |
+| `DELETE /admin/clients/{id}` | active logins, or active offline sessions |
+| `DELETE /admin/users/{id}` | an active session, or an active offline session |
+| `DELETE /admin/roles/{id}` | assigned to users, or referenced by a scope-role mapping |
+
+`error_description` names the blocking thing — show it verbatim, do not retry. A refused
+delete means "revoke first": `POST /admin/sessions/invalidate` (by `user_id` and/or
+`client_id`) expires the active grants, then the delete succeeds. Wire that order into a single
+"revoke and delete" action instead of making the operator discover it.
 
 ---
 
@@ -277,6 +296,10 @@ Realm object (also the shape of `GET /realms/{id}` and the create/update respons
 `scope` is a **single space-delimited string**, not an array — split on `" "` in the UI.
 It is also the only catalog of available scopes; there is no scopes endpoint.
 
+`session_expires_in` is the maximum SSO session lifetime and `idle_session_expires_in` the
+inactivity cutoff — a session ends at whichever comes first, so label them that way in the
+realm form rather than showing two unexplained TTLs.
+
 **`POST /admin/realms`** → `201`
 
 | Field | Required | Default |
@@ -307,8 +330,8 @@ their current value. Password policy fields have a deliberate three-way rule:
 disabling). This is the only way to clear an override, so the UI must send the field
 explicitly as `null` rather than omitting it.
 
-**`DELETE /admin/realms/{id}`** → `204`. Refuses with `409` whilewhile the realm still has anyany
-clientclient or any user. Roles are not checkedany user. Roles are not checked.
+**`DELETE /admin/realms/{id}`** → `204`. Refuses with `409` while the realm still has any
+client or any user. Roles are not checked.
 
 ### 5.2 Keys
 
@@ -398,7 +421,7 @@ stays. `name` is nullable.
 to change it (this is also the admin-only password reset). Sending `realm_roles` returns
 `400` — that field was removed; roles are entities now (§5.5).
 
-**`DELETE /admin/users/{id}`** → `204`, `409` while the user has an active sessionsession or an
+**`DELETE /admin/users/{id}`** → `204`, `409` while the user has an active session or an
 active offline session. (Logins are not checked; they go with the sessions.)
 
 ### 5.5 Roles and user-role assignment
@@ -415,7 +438,8 @@ Roles are either realm roles (`client_id: null`) or client roles (`client_id` se
 **`POST /admin/roles`** → `201` — `realm_id` (required), `name` (required), `client_id`
 (optional, omit for a realm role), `description` (optional).
 **`PUT /admin/roles/{id}`** → `200` — `name` and/or `description`.
-**`DELETE /admin/roles/{id}`** → `204`.
+**`DELETE /admin/roles/{id}`** → `204`, `409` while the role is assigned to users or still
+referenced by a scope-role mapping.
 
 **`GET /admin/users/{id}/roles`** → list envelope of role objects.
 **`POST /admin/users/{id}/roles`** → `201`, body `{ "role_id": "uuid" }`, returns the assigned
@@ -433,7 +457,7 @@ Shape is flatter than a normal object because it is a join row:
 ```
 
 - **`GET /admin/clients/{id}/scope-roles`** → list envelope.
-- **`POST /admin/clients/{id}/scope-roles`** → `201`, body `{ "scope": "...", "role_id": "...", "required": false }`. Both `scope` and `role_id` are required; the scope must be valid for that client (present in the client's own `scope`, or inherited from its realm) or `400`. TheBoth `scope` and `role_id` are required; the scope must be valid for that client (present in the client's own `scope`, or inherited from its realm) or `400`. The `{scope, role_id}` pair is unique, so a second POST for the same pair is a `409` — the UI should check the list first or treat `409` as "already mapped".
+- **`POST /admin/clients/{id}/scope-roles`** → `201`, body `{ "scope": "...", "role_id": "...", "required": false }`. Both `scope` and `role_id` are required; the scope must be valid for that client (present in the client's own `scope`, or inherited from its realm) or `400`. The `{scope, role_id}` pair is unique, so a second POST for the same pair is a `409` — the UI should check the list first or treat `409` as "already mapped".
 - **`PUT /admin/clients/{id}/scope-roles/{scope}/{role_id}`** → `200`, body `{ "required": true }`. Only `required` is updatable; to change the pair, delete and recreate. The response is `{ "scope": ..., "role_id": ..., "required": ... }` — **it omits `role_name`** even though the list includes it.
 - **`DELETE /admin/clients/{id}/scope-roles/{scope}/{role_id}`** → `204`, idempotent.
 
@@ -518,7 +542,8 @@ Every admin write on realms, clients, users, roles and scope-role mappings is re
 
 `actor_type` is exactly one of `admin_user` (a JWT admin logged in) or `api_key` (the static
 key) — use it to badge the origin of a change. `actor_id` is the JWT `sub` claim and is `null`
-for the static key. `detail` is the request payload as a JSON object, merged with identifiers
+for the static key. `target_type` is `realm`, `client`, `user`, `role` or `scope_role`; for a
+`scope_role` action `target_id` is the **role id**, not the client id. `detail` is the request payload as a JSON object, merged with identifiers
 taken from the route, and `null` when there was nothing to record. **`password` and
 `client_secret` are replaced with `"***"` before storage**, so a secret never reaches this log.
 **Treat `detail` as untyped and version-unstable** — display it, never parse it into a form.
