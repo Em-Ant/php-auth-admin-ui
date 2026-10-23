@@ -101,10 +101,12 @@ src/
   pages/        route-level screens
   shared/       shared utilities
   store/        store, reducers, listener wiring
+  test/         test-only helpers (render, store factory, API spies)
 ```
 
 ## Documentation
 
+- **Domain glossary:** [`CONTEXT.md`](CONTEXT.md) — the canonical terms (Realm, Client, User, Role, Session, Login, Offline session, Scope, Scope-role mapping, Audit entry, Operator).
 - **Handoff docs (kept at `.scratch/admin-ui/`):**
   [`README`](.scratch/admin-ui/README.md),
   [`GETTING-STARTED`](.scratch/admin-ui/GETTING-STARTED.md),

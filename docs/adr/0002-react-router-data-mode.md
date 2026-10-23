@@ -25,12 +25,14 @@ configured from route objects in `src/routes.tsx`.
   `user` slice.
 - **Guards** are loaders, not effects. A pathless layout route runs
   `requireAdmin`, which returns a `redirect()` to `/login?from=…` or
-  `/forbidden` before the protected route renders.
-- **Data loaders dispatch, they do not return data.** A protected screen's
-  loader awaits bootstrap, calls the same guard, reads pagination/filters from
-  `request.url`, then dispatches its fetch thunk and returns `null`. The slice
-  owns loading, error and pagination state, and the page renders its skeleton.
-  See ADR-0003.
+  `/forbidden` before the protected route renders. Protected data routes are
+  additionally wrapped individually (see below).
+- **Data loaders are app-owned and dispatch, they do not return data.** A
+  protected route's loader is composed as bootstrap → admin guard → data
+  loader. The data loader reads pagination/filters from `request.url`,
+  dispatches its entity thunk and returns `null`. The slice owns loading, error
+  and pagination state; the page renders selectors and its skeleton. See
+  ADR-0003.
 - **A loader does not read other slices.** If the request depends on state
   owned by another slice, the loader dispatches a thunk that resolves the value
   through that slice's selector. It never calls `store.getState()` at the
@@ -46,9 +48,9 @@ configured from route objects in `src/routes.tsx`.
 - **Initial load** renders the shared `Loader` via `HydrateFallback`.
 - **Code splitting** uses route `lazy` when screens are added, so each screen
   loads with its own chunk.
-- **Loader/action failures** belong in route-level `errorElement`s rather than
-  the default development error screen. (Not yet added; the current 404 and
-  placeholder screens do not throw.)
+- **Loader/action failures** render the root route's `errorElement`
+  (`src/pages/ErrorPage.tsx`) instead of the default development error screen.
+  It shows the message and offers reload/home without leaking a stack trace.
 
 Declarative mode and framework/SSR mode are both rejected for now.
 
@@ -58,8 +60,9 @@ Declarative mode and framework/SSR mode are both rejected for now.
   guard resolves before the route renders.
 - Matched loaders run in parallel. Nothing may assume the root loader has
   finished, so the bootstrap promise is shared and every auth-touching loader
-  awaits it. A parent guard redirecting does not prevent a sibling data loader
-  from running, so data loaders run the guard themselves before dispatching.
+  awaits it. Because each protected data loader is wrapped with the guard, a
+  sibling loader cannot bypass it; the pathless guard remains for routes that
+  have no loader of their own.
 - Because data loaders dispatch fire-and-forget thunks, navigation is not
   blocked on the API; the destination renders immediately with its slice's
   loading state.

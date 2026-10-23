@@ -17,6 +17,7 @@ import {
   CardTitle,
 } from "./components/ui/card";
 import { requestLogin, setLoggedInUser } from "./features/user/slice";
+import { ErrorPage } from "./pages/ErrorPage";
 import { Layout } from "./pages/Layout";
 import { NotFound } from "./pages/NotFound";
 import { Overview } from "./pages/Overview";
@@ -127,6 +128,7 @@ export const createRoutes = (store: AppStore) => {
       path: "/",
       loader: appLoader,
       element: <Layout />,
+      errorElement: <ErrorPage />,
       HydrateFallback: Loader,
       children: [
         { index: true, element: <Navigate to="/overview" replace /> },

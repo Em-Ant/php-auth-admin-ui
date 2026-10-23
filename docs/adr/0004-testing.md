@@ -22,12 +22,16 @@ Tests are colocated with the code as `*.test.ts` / `*.test.tsx` and run under
 Vitest with jsdom. `vitest.config.ts` loads `src/setupTests.ts`, which owns
 global setup such as Testing Library cleanup and the `matchMedia` stub.
 
-**Current baseline.** The shell has a layout test and an auth-guard regression
-test only. Reducer, helper and feature-flow tests arrive with the first data
-slice and are required for that change. Those two tests still use the app
-singleton; new tests create their own store and router. `vitest.config.ts`
-contains coverage settings, but `@vitest/coverage-v8` is not installed yet, so
-`--coverage` is unavailable until the dev dependency is added.
+**Current baseline.** The shell has layout, auth-guard and error-page tests
+only. Reducer, helper and feature-flow tests arrive with the first data slice
+and are required for that change. New tests create their own store and router
+through the helpers below. `vitest.config.ts` contains coverage settings, but
+`@vitest/coverage-v8` is not installed yet, so `--coverage` is unavailable
+until the dev dependency is added.
+
+Shared test helpers live in `src/test/`: `renderWithProviders`, `createAppStore`
+for a fresh store, and spies for the API boundary. They are test-only tooling,
+not an FSD layer; `src/setupTests.ts` restores the spies after each test.
 
 ### Levels
 

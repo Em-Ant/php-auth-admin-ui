@@ -1,5 +1,5 @@
 import { cleanup } from "@testing-library/react";
-import { afterEach } from "vitest";
+import { afterEach, vi } from "vitest";
 import "@testing-library/jest-dom";
 
 // jsdom does not implement matchMedia; the sidebar breakpoint hook needs it.
@@ -15,7 +15,8 @@ window.matchMedia = (query: string): MediaQueryList =>
     dispatchEvent: () => false,
   }) as MediaQueryList;
 
-// runs a cleanup after each test case (e.g. clearing jsdom)
+// Clean up the DOM and restore API spies after each test case.
 afterEach(() => {
   cleanup();
+  vi.restoreAllMocks();
 });

@@ -36,9 +36,14 @@ including server data.
 Under FSD (ADR-0001), a server-backed slice lives in `entities/<model>` —
 `realms`, `clients`, `users`, `roles`, `sessions`, `logins`,
 `offline-sessions`, `audit-logs` — because more than one page reads it. A slice
-that exists only for a single user action lives in `features/<action>`. Session
-and bootstrap state belong to the app layer; the current `features/user` slice
-is app-level session state and moves when the `app` layer is introduced.
+that exists only for a single user action lives in `features/<action>`. An
+entity slice keeps `api.ts` (endpoint calls), `slice.ts` (state and thunks),
+`selectors.ts`, a public `index.ts` and colocated tests; pages and components
+import it only through `index.ts`.
+
+Session and bootstrap state belong to the app layer. The current
+`features/user` slice is a documented pre-FSD exception: it stays where it is
+until an app layer exists, and pages read it directly in the meantime.
 
 ## Store rules
 

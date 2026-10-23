@@ -1,21 +1,17 @@
-import { render, screen } from "@testing-library/react";
-import { Provider } from "react-redux";
-import { MemoryRouter, Route, Routes } from "react-router";
+import { screen } from "@testing-library/react";
+import { Route, Routes } from "react-router";
 import { describe, expect, it } from "vitest";
-import { store } from "../store";
+import { renderWithProviders } from "../test/render";
 import { Layout } from "./Layout";
 
 const renderLayout = () =>
-  render(
-    <Provider store={store}>
-      <MemoryRouter initialEntries={["/overview"]}>
-        <Routes>
-          <Route path="/" element={<Layout />}>
-            <Route path="overview" element={<p>overview content</p>} />
-          </Route>
-        </Routes>
-      </MemoryRouter>
-    </Provider>,
+  renderWithProviders(
+    <Routes>
+      <Route path="/" element={<Layout />}>
+        <Route path="overview" element={<p>overview content</p>} />
+      </Route>
+    </Routes>,
+    { route: "/overview" },
   );
 
 describe("Layout", () => {
