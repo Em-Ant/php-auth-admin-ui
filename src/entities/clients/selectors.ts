@@ -1,3 +1,4 @@
+import { createSelector } from "@reduxjs/toolkit";
 import type { ClientsState } from "./slice";
 
 /**
@@ -11,11 +12,15 @@ interface StateWithClients {
 export const selectClientsItems = (state: StateWithClients) =>
   state.clients.items;
 
-export const selectClientsPage = (state: StateWithClients) => ({
-  total: state.clients.total,
-  limit: state.clients.limit,
-  offset: state.clients.offset,
-});
+const selectClientsTotal = (state: StateWithClients) => state.clients.total;
+const selectClientsLimit = (state: StateWithClients) => state.clients.limit;
+const selectClientsOffset = (state: StateWithClients) => state.clients.offset;
+
+/** Memoized so the page object keeps a stable reference between calls. */
+export const selectClientsPage = createSelector(
+  [selectClientsTotal, selectClientsLimit, selectClientsOffset],
+  (total, limit, offset) => ({ total, limit, offset }),
+);
 
 export const selectClientsListStatus = (state: StateWithClients) =>
   state.clients.listStatus;

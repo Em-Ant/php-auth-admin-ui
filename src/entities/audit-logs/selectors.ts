@@ -1,3 +1,4 @@
+import { createSelector } from "@reduxjs/toolkit";
 import type { AuditLogsState } from "./slice";
 
 /**
@@ -11,11 +12,18 @@ interface StateWithAuditLogs {
 export const selectAuditLogsItems = (state: StateWithAuditLogs) =>
   state.auditLogs.items;
 
-export const selectAuditLogsPage = (state: StateWithAuditLogs) => ({
-  total: state.auditLogs.total,
-  limit: state.auditLogs.limit,
-  offset: state.auditLogs.offset,
-});
+const selectAuditLogsTotal = (state: StateWithAuditLogs) =>
+  state.auditLogs.total;
+const selectAuditLogsLimit = (state: StateWithAuditLogs) =>
+  state.auditLogs.limit;
+const selectAuditLogsOffset = (state: StateWithAuditLogs) =>
+  state.auditLogs.offset;
+
+/** Memoized so the page object keeps a stable reference between calls. */
+export const selectAuditLogsPage = createSelector(
+  [selectAuditLogsTotal, selectAuditLogsLimit, selectAuditLogsOffset],
+  (total, limit, offset) => ({ total, limit, offset }),
+);
 
 export const selectAuditLogsListStatus = (state: StateWithAuditLogs) =>
   state.auditLogs.listStatus;

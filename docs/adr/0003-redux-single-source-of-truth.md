@@ -81,6 +81,19 @@ into slice state directly.
   React, React Router or anything from `src/pages` or `src/shared/ui`. A
   screen can be deleted without touching the store, and the store can be
   exercised in a test without rendering a component.
+- **Selectors return primitives; memoize everything else.** A selector read by
+  `useSelector` should return a primitive (string, number, boolean, null, or
+  a stable state reference) so the default `===` equality check is
+  meaningful. When a component needs a derived object or array — a page
+  envelope, a combined status — build it with `createSelector` from
+  `@reduxjs/toolkit` over primitive input selectors, so the result keeps a
+  stable reference while its inputs are unchanged. This applies to empty
+  results too: return the state's stored array, or a module-level constant,
+  never a fresh `[]` or `{}`. Never construct a new object or array literal
+  inside a plain selector body: it returns a different reference on every
+  call, which defeats the equality check and re-renders every subscriber on
+  any store update (React-Redux logs this as "returned a different result
+  when called with the same parameters").
 
 ## Consequences
 

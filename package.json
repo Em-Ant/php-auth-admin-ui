@@ -10,6 +10,7 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "test": "vitest",
+    "test:cov": "vitest run --coverage",
     "check-types": "tsc -b",
     "check": "biome check ./src",
     "check:fix": "biome check --write ./src"
@@ -40,6 +41,7 @@
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.2",
+    "@vitest/coverage-v8": "4.1.12",
     "jsdom": "^29.1.1",
     "msw": "^3.0.3",
     "tailwindcss": "^4.3.1",

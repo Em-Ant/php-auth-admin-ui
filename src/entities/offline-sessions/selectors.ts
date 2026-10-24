@@ -1,3 +1,4 @@
+import { createSelector } from "@reduxjs/toolkit";
 import type { OfflineSessionsState } from "./slice";
 
 /**
@@ -11,11 +12,22 @@ interface StateWithOfflineSessions {
 export const selectOfflineSessionsItems = (state: StateWithOfflineSessions) =>
   state.offlineSessions.items;
 
-export const selectOfflineSessionsPage = (state: StateWithOfflineSessions) => ({
-  total: state.offlineSessions.total,
-  limit: state.offlineSessions.limit,
-  offset: state.offlineSessions.offset,
-});
+const selectOfflineSessionsTotal = (state: StateWithOfflineSessions) =>
+  state.offlineSessions.total;
+const selectOfflineSessionsLimit = (state: StateWithOfflineSessions) =>
+  state.offlineSessions.limit;
+const selectOfflineSessionsOffset = (state: StateWithOfflineSessions) =>
+  state.offlineSessions.offset;
+
+/** Memoized so the page object keeps a stable reference between calls. */
+export const selectOfflineSessionsPage = createSelector(
+  [
+    selectOfflineSessionsTotal,
+    selectOfflineSessionsLimit,
+    selectOfflineSessionsOffset,
+  ],
+  (total, limit, offset) => ({ total, limit, offset }),
+);
 
 export const selectOfflineSessionsListStatus = (
   state: StateWithOfflineSessions,
