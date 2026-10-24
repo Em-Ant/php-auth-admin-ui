@@ -3,7 +3,7 @@ import { ADMIN_ROLE } from "@/shared/auth";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
 
 export const Forbidden = () => (
-  <div className="flex min-h-[70vh] items-center justify-center">
+  <div className="flex min-h-screen items-center justify-center p-6">
     <Card className="w-full max-w-sm">
       <CardHeader className="text-center">
         <div className="mx-auto mb-2 flex size-10 items-center justify-center rounded-full bg-muted">

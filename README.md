@@ -57,6 +57,7 @@ target different backends. It is copied into `dist/` as-is.
 | Command | What it does |
 |---|---|
 | `pnpm dev` | Vite dev server at `http://localhost:5173/admin-ui/`. |
+| `pnpm start:mock` | Same, but the admin API is served by the MSW mock (real login, mocked data). |
 | `pnpm build` | Typechecks with `tsc -b`, then builds `dist/`. |
 | `pnpm preview` | Serves the production build locally. |
 | `pnpm test` | Vitest in watch mode. |
@@ -64,6 +65,14 @@ target different backends. It is copied into `dist/` as-is.
 | `pnpm check-types` | `tsc -b`, no emit. |
 | `pnpm check` | Biome lint and format check over `src`. |
 | `pnpm check:fix` | Biome with autofixes. |
+
+## Mock mode
+
+`pnpm start:mock` sets `VITE_MOCK=1`. The worker in `src/mocks/` serves
+`/health`, `/ready` and every `/admin/*` endpoint from an in-memory store,
+while OIDC login still goes to the real backend from `public/config.json`.
+Writes persist until reload. The same handlers back `src/mocks/server.ts` for
+future integration tests; `src/mocks/handlers.test.ts` is the usage pattern.
 
 ## How it works
 

@@ -1,8 +1,7 @@
-import { ChevronsUpDown, LogIn, LogOut, ShieldCheck } from "lucide-react";
+import { ChevronsUpDown, LogOut, ShieldCheck } from "lucide-react";
 
 import { Link, Outlet, useLocation } from "react-router";
 import {
-  requestLogin,
   requestLogout,
   selectOperatorName,
   selectOperatorRoles,
@@ -146,18 +145,7 @@ export const Layout = () => {
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </SidebarMenuItem>
-              ) : (
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    size="lg"
-                    onClick={() => dispatch(requestLogin())}
-                    tooltip="Log in"
-                  >
-                    <LogIn />
-                    <span>Log in</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              )}
+              ) : null}
             </SidebarMenu>
           </SidebarFooter>
           <SidebarRail />

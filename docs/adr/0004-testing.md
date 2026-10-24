@@ -56,7 +56,8 @@ the rendered behaviour, not the implementation.
 it meaningfully, do not duplicate it as a hook test.
 
 **Integration.** Integration tests are the acceptance bar for a feature. They
-mock the **API boundary** (`appApiClient` / `rawApiClient`, or `fetch`), not
+mock the **API boundary** (the MSW node server in `src/mocks/server.ts`, or
+`appApiClient` / `rawApiClient` spies in older tests), not
 thunks, reducers or selectors, so the real store transitions and the real
 loader wiring execute. Session concerns (`bootstrap`, `isAuthenticated`,
 `hasRole`) are mocked at the auth boundary, as `src/app/routes.test.tsx` does.
@@ -94,6 +95,6 @@ asserts the resulting UI and store state.
 
 ## Revisit when
 
-A browser E2E suite or a request-mocking layer such as MSW is adopted, coverage
+A browser E2E suite is adopted, coverage
 gates are introduced, or React Router framework mode changes how routes and
 loaders are mounted in tests.

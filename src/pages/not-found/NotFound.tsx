@@ -2,7 +2,7 @@ import { Link } from "react-router";
 import { Button } from "@/shared/ui/button";
 
 export const NotFound = () => (
-  <div className="flex min-h-[60vh] flex-col items-center justify-center gap-2">
+  <div className="flex min-h-screen flex-col items-center justify-center gap-2 p-6">
     <p className="text-sm font-medium text-muted-foreground">404</p>
     <h2 className="text-xl font-semibold">Page not found</h2>
     <p className="text-sm text-muted-foreground">

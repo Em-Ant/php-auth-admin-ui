@@ -1,4 +1,4 @@
-import { type LoaderFunctionArgs, Navigate, redirect } from "react-router";
+import { Navigate, redirect } from "react-router";
 import { Forbidden } from "@/pages/forbidden";
 import { Login, loginLoader } from "@/pages/login";
 import { NotFound } from "@/pages/not-found";
@@ -14,12 +14,6 @@ import type { AppStore } from "./store/store";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
-/** The router strips the basename; loader request URLs do not. */
-const stripBasePath = (pathname: string) =>
-  basePath && pathname.startsWith(basePath)
-    ? pathname.slice(basePath.length) || "/"
-    : pathname;
-
 const createAppLoader = (store: AppStore) => async () => {
   // Fetches config.json, then initializes keycloak once (PKCE, check-sso).
   await bootstrap();
@@ -29,15 +23,12 @@ const createAppLoader = (store: AppStore) => async () => {
   return null;
 };
 
-const requireAdmin = async ({ request }: LoaderFunctionArgs) => {
+const requireAdmin = async () => {
   // Child loaders run in parallel with the root loader: do not assume the
   // root loader has finished initializing Keycloak yet.
   await bootstrap();
   if (!(await isAuthenticated())) {
-    const params = new URLSearchParams({
-      from: stripBasePath(new URL(request.url).pathname),
-    });
-    return redirect(`/login?${params.toString()}`);
+    return redirect("/login");
   }
   if (!(await hasRole(ADMIN_ROLE))) {
     return redirect("/forbidden");
@@ -70,13 +61,16 @@ export const createRoutes = (store: AppStore) => {
     {
       path: "/",
       loader: appLoader,
-      element: <Layout />,
       errorElement: <ErrorPage />,
       HydrateFallback: Loader,
       children: [
         { index: true, element: <Navigate to="/overview" replace /> },
         {
+          // Authenticated shell: the sidebar with internal navigation only
+          // renders after requireAdmin passes. Public screens stay outside
+          // so logged-out users never see internal details.
           loader: requireAdmin,
+          element: <Layout />,
           children: [
             { path: "overview", element: <Overview /> },
             {

@@ -24,7 +24,7 @@ configured from route objects in `src/app/routes.tsx`.
   in `src/app/bootstrap.ts`; the signed-in operator is then hydrated into the
   `app/model/operator` slice.
 - **Guards** are loaders, not effects. A pathless layout route runs
-  `requireAdmin`, which returns a `redirect()` to `/login?from=…` or
+  `requireAdmin`, which returns a `redirect()` to `/login` or
   `/forbidden` before the protected route renders. Protected data routes are
   additionally wrapped individually (see below).
 - **Data loaders are page-owned; the route table composes them.** Each screen
