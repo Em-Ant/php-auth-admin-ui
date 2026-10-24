@@ -2,6 +2,20 @@ import { cleanup } from "@testing-library/react";
 import { afterEach, vi } from "vitest";
 import "@testing-library/jest-dom";
 
+// jsdom does not implement ResizeObserver; Radix primitives (Switch, Select,
+// and friends) measure with it on mount.
+window.ResizeObserver = class ResizeObserver {
+  observe() {
+    /* noop */
+  }
+  unobserve() {
+    /* noop */
+  }
+  disconnect() {
+    /* noop */
+  }
+};
+
 // jsdom does not implement matchMedia; the sidebar breakpoint hook needs it.
 window.matchMedia = (query: string): MediaQueryList =>
   ({
