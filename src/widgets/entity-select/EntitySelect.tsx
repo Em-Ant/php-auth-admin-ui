@@ -42,7 +42,7 @@ export const EntitySelect = ({
         value={value}
         disabled={disabled}
         onChange={(event) => onChange(event.target.value)}
-        className="h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm outline-none focus-visible:border-ring disabled:pointer-events-none disabled:opacity-50 dark:bg-input/30"
+        className="h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm outline-none focus-visible:border-ring disabled:pointer-events-none disabled:opacity-50 dark:bg-input/30 [&_option]:bg-popover [&_option]:text-popover-foreground"
       >
         {allLabel !== undefined ? <option value="">{allLabel}</option> : null}
         {placeholder !== undefined && value === "" ? (

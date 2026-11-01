@@ -1,10 +1,10 @@
 {
   "auth": {
-    "url": "https://emant.altervista.org/id",
-    "realm": "test",
-    "clientId": "local"
+    "url": "http://localhost:8000",
+    "realm": "admin",
+    "clientId": "admin-ui"
   },
   "app": {
-    "apiHome": "https://emant.altervista.org/id"
+    "apiHome": "http://localhost:8000"
   }
 }

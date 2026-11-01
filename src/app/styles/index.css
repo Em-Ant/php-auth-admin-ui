@@ -49,6 +49,9 @@
 }
 
 :root {
+  /* Tells the browser to render native widgets (select popups, scrollbars,
+     date pickers) in light mode, matching the light theme tokens below. */
+  color-scheme: light;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -84,6 +87,9 @@
 }
 
 .dark {
+  /* Native widgets must follow the dark tokens, otherwise the OS paints
+     select popups light while the app foreground stays light too. */
+  color-scheme: dark;
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);
