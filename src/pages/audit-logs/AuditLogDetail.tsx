@@ -1,13 +1,14 @@
 import { ArrowLeft } from "lucide-react";
 import type { ReactNode } from "react";
-import { Link, useParams } from "react-router";
+import { Link, useOutletContext, useParams } from "react-router";
+import type { ShellOutletContext } from "@/app/layout";
 import {
   selectAuditLogDetail,
   selectAuditLogDetailError,
   selectAuditLogDetailStatus,
 } from "@/entities/audit-logs";
 import { selectRealmsItems } from "@/entities/realms";
-import { useAppSelector } from "@/shared/lib";
+import { realmPath, useAppSelector } from "@/shared/lib";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import {
@@ -34,6 +35,7 @@ const DetailRow = ({
 
 export const AuditLogDetail = () => {
   const { id = "" } = useParams();
+  const { activeRealmId } = useOutletContext<ShellOutletContext>();
   const detail = useAppSelector(selectAuditLogDetail);
   const status = useAppSelector(selectAuditLogDetailStatus);
   const error = useAppSelector(selectAuditLogDetailError);
@@ -59,7 +61,7 @@ export const AuditLogDetail = () => {
         </CardHeader>
         <CardContent>
           <Button asChild variant="outline" size="sm">
-            <Link to="/audit-logs">
+            <Link to={realmPath(activeRealmId, "/audit-logs")}>
               <ArrowLeft />
               Back to audit log
             </Link>
@@ -78,7 +80,7 @@ export const AuditLogDetail = () => {
         </CardHeader>
         <CardContent>
           <Button asChild variant="outline" size="sm">
-            <Link to="/audit-logs">
+            <Link to={realmPath(activeRealmId, "/audit-logs")}>
               <ArrowLeft />
               Back to audit log
             </Link>
@@ -97,7 +99,7 @@ export const AuditLogDetail = () => {
     <div className="flex flex-col gap-4">
       <div>
         <Button asChild variant="ghost" size="sm" className="-ml-2">
-          <Link to="/audit-logs">
+          <Link to={realmPath(activeRealmId, "/audit-logs")}>
             <ArrowLeft />
             Audit log
           </Link>

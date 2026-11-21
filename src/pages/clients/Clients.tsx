@@ -1,6 +1,7 @@
 import { Plus } from "lucide-react";
 import { useState } from "react";
-import { Link, useSearchParams } from "react-router";
+import { Link, useOutletContext, useSearchParams } from "react-router";
+import type { ShellOutletContext } from "@/app/layout";
 import {
   fetchClients,
   selectClientsItems,
@@ -9,7 +10,7 @@ import {
   selectClientsPage,
 } from "@/entities/clients";
 import { selectRealmsItems } from "@/entities/realms";
-import { useAppDispatch, useAppSelector } from "@/shared/lib";
+import { realmPath, useAppDispatch, useAppSelector } from "@/shared/lib";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent } from "@/shared/ui/card";
@@ -30,6 +31,7 @@ import { readClientsListParams } from "./params";
 
 export const Clients = () => {
   const dispatch = useAppDispatch();
+  const { activeRealmId } = useOutletContext<ShellOutletContext>();
   const [searchParams, setSearchParams] = useSearchParams();
   const params = readClientsListParams(searchParams);
   const items = useAppSelector(selectClientsItems);
@@ -156,7 +158,7 @@ export const Clients = () => {
                     <TableRow key={client.id}>
                       <TableCell>
                         <Link
-                          to={`/clients/${client.id}`}
+                          to={realmPath(activeRealmId, `/clients/${client.id}`)}
                           className="font-medium text-primary underline-offset-4 hover:underline"
                         >
                           {client.name}

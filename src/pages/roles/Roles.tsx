@@ -1,6 +1,7 @@
 import { Plus } from "lucide-react";
 import { useState } from "react";
-import { Link, useSearchParams } from "react-router";
+import { Link, useOutletContext, useSearchParams } from "react-router";
+import type { ShellOutletContext } from "@/app/layout";
 import { selectClientsItems } from "@/entities/clients";
 import { selectRealmsItems } from "@/entities/realms";
 import {
@@ -10,7 +11,7 @@ import {
   selectRolesListStatus,
   selectRolesPage,
 } from "@/entities/roles";
-import { useAppDispatch, useAppSelector } from "@/shared/lib";
+import { realmPath, useAppDispatch, useAppSelector } from "@/shared/lib";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent } from "@/shared/ui/card";
@@ -30,6 +31,7 @@ import { CreateRoleDialog } from "./RoleDialogs";
 
 export const Roles = () => {
   const dispatch = useAppDispatch();
+  const { activeRealmId } = useOutletContext<ShellOutletContext>();
   const [searchParams, setSearchParams] = useSearchParams();
   const params = readRolesListParams(searchParams);
   const items = useAppSelector(selectRolesItems);
@@ -150,7 +152,7 @@ export const Roles = () => {
                     <TableRow key={role.id}>
                       <TableCell>
                         <Link
-                          to={`/roles/${role.id}`}
+                          to={realmPath(activeRealmId, `/roles/${role.id}`)}
                           className="font-medium text-primary underline-offset-4 hover:underline"
                         >
                           {role.name}

@@ -44,7 +44,13 @@ import {
 } from "@/shared/ui/sidebar";
 import { Switch } from "@/shared/ui/switch";
 import { TooltipProvider } from "@/shared/ui/tooltip";
-import { NAV_GROUPS, pageTitleFor } from "./navigation";
+import {
+  isNavItemActive,
+  NAV_GROUPS,
+  type NavItem,
+  navHref,
+  pageTitleFor,
+} from "./navigation";
 import type { ShellOutletContext } from "./outlet-context";
 
 const getInitials = (name: string | null) =>
@@ -71,8 +77,7 @@ export const Layout = () => {
     [dispatch],
   );
 
-  const isActive = (href: string) =>
-    pathname === href || pathname.startsWith(`${href}/`);
+  const isActive = (item: NavItem) => isNavItemActive(item, pathname);
 
   return (
     <TooltipProvider>
@@ -126,13 +131,13 @@ export const Layout = () => {
                 <SidebarGroupContent>
                   <SidebarMenu>
                     {group.items.map((item) => (
-                      <SidebarMenuItem key={item.href}>
+                      <SidebarMenuItem key={item.title}>
                         <SidebarMenuButton
                           asChild
-                          isActive={isActive(item.href)}
+                          isActive={isActive(item)}
                           tooltip={item.title}
                         >
-                          <Link to={item.href}>
+                          <Link to={navHref(item, activeRealmId)}>
                             <item.icon />
                             <span>{item.title}</span>
                           </Link>

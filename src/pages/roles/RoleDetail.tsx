@@ -1,6 +1,7 @@
 import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
 import { type ReactNode, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router";
+import { Link, useNavigate, useOutletContext, useParams } from "react-router";
+import type { ShellOutletContext } from "@/app/layout";
 import { selectClientsItems } from "@/entities/clients";
 import { selectRealmsItems } from "@/entities/realms";
 import {
@@ -10,7 +11,7 @@ import {
   selectRoleDetailError,
   selectRoleDetailStatus,
 } from "@/entities/roles";
-import { useAppDispatch, useAppSelector } from "@/shared/lib";
+import { realmPath, useAppDispatch, useAppSelector } from "@/shared/lib";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import {
@@ -41,6 +42,7 @@ export const RoleDetail = () => {
   const { id = "" } = useParams();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const { activeRealmId } = useOutletContext<ShellOutletContext>();
   const detail = useAppSelector(selectRoleDetail);
   const status = useAppSelector(selectRoleDetailStatus);
   const error = useAppSelector(selectRoleDetailError);
@@ -69,7 +71,7 @@ export const RoleDetail = () => {
         </CardHeader>
         <CardContent>
           <Button asChild variant="outline" size="sm">
-            <Link to="/roles">
+            <Link to={realmPath(activeRealmId, "/roles")}>
               <ArrowLeft />
               Back to roles
             </Link>
@@ -88,7 +90,7 @@ export const RoleDetail = () => {
         </CardHeader>
         <CardContent>
           <Button asChild variant="outline" size="sm">
-            <Link to="/roles">
+            <Link to={realmPath(activeRealmId, "/roles")}>
               <ArrowLeft />
               Back to roles
             </Link>
@@ -111,7 +113,7 @@ export const RoleDetail = () => {
       <div className="flex items-start justify-between gap-4">
         <div>
           <Button asChild variant="ghost" size="sm" className="-ml-2">
-            <Link to="/roles">
+            <Link to={realmPath(activeRealmId, "/roles")}>
               <ArrowLeft />
               Roles
             </Link>
@@ -177,7 +179,7 @@ export const RoleDetail = () => {
         description="The role is deleted permanently. Assignments and scope-role mappings block the delete."
         confirmLabel="Delete role"
         onConfirm={() => dispatch(deleteRoleThunk(id)).unwrap()}
-        onDone={() => void navigate("/roles")}
+        onDone={() => void navigate(realmPath(activeRealmId, "/roles"))}
       />
     </div>
   );

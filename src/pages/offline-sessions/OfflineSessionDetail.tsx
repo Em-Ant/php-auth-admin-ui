@@ -1,6 +1,7 @@
 import { ArrowLeft, Trash2 } from "lucide-react";
 import { type ReactNode, useState } from "react";
-import { Link, useParams } from "react-router";
+import { Link, useOutletContext, useParams } from "react-router";
+import type { ShellOutletContext } from "@/app/layout";
 import { selectClientsItems } from "@/entities/clients";
 import {
   fetchOfflineSessionById,
@@ -11,7 +12,7 @@ import {
 } from "@/entities/offline-sessions";
 import { selectRealmsItems } from "@/entities/realms";
 import { selectUsersItems } from "@/entities/users";
-import { useAppDispatch, useAppSelector } from "@/shared/lib";
+import { realmPath, useAppDispatch, useAppSelector } from "@/shared/lib";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import {
@@ -40,6 +41,7 @@ const DetailRow = ({
 export const OfflineSessionDetail = () => {
   const { id = "" } = useParams();
   const dispatch = useAppDispatch();
+  const { activeRealmId } = useOutletContext<ShellOutletContext>();
   const detail = useAppSelector(selectOfflineSessionDetail);
   const status = useAppSelector(selectOfflineSessionDetailStatus);
   const error = useAppSelector(selectOfflineSessionDetailError);
@@ -68,7 +70,7 @@ export const OfflineSessionDetail = () => {
         </CardHeader>
         <CardContent>
           <Button asChild variant="outline" size="sm">
-            <Link to="/offline-sessions">
+            <Link to={realmPath(activeRealmId, "/offline-sessions")}>
               <ArrowLeft />
               Back to offline sessions
             </Link>
@@ -89,7 +91,7 @@ export const OfflineSessionDetail = () => {
         </CardHeader>
         <CardContent>
           <Button asChild variant="outline" size="sm">
-            <Link to="/offline-sessions">
+            <Link to={realmPath(activeRealmId, "/offline-sessions")}>
               <ArrowLeft />
               Back to offline sessions
             </Link>
@@ -112,7 +114,7 @@ export const OfflineSessionDetail = () => {
     <div className="flex flex-col gap-4">
       <div>
         <Button asChild variant="ghost" size="sm" className="-ml-2">
-          <Link to="/offline-sessions">
+          <Link to={realmPath(activeRealmId, "/offline-sessions")}>
             <ArrowLeft />
             Offline sessions
           </Link>

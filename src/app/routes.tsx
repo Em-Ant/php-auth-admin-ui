@@ -1,4 +1,10 @@
-import { type LoaderFunctionArgs, Navigate, redirect } from "react-router";
+import {
+  type LoaderFunctionArgs,
+  Navigate,
+  Outlet,
+  redirect,
+  useOutletContext,
+} from "react-router";
 import { fetchAuditLogById, fetchAuditLogs } from "@/entities/audit-logs";
 import {
   fetchClientById,
@@ -14,6 +20,7 @@ import {
   fetchRealmById,
   fetchRealmOptions,
   fetchRealms,
+  selectRealmOptions,
 } from "@/entities/realms";
 import { fetchRoleById, fetchRoles } from "@/entities/roles";
 import { fetchSessions } from "@/entities/sessions";
@@ -42,8 +49,13 @@ import { ADMIN_ROLE, getUser, hasRole, isAuthenticated } from "@/shared/auth";
 import { Loader } from "@/shared/ui/Loader";
 import bootstrap from "./bootstrap";
 import { ErrorPage } from "./error";
-import { Layout } from "./layout";
+import { Layout, SCOPED_ROOTS, type ShellOutletContext } from "./layout";
 import { requestLogin, setOperator } from "./model/operator";
+import {
+  resolveActiveRealm,
+  selectActiveRealmId,
+  setActiveRealm,
+} from "./model/realm";
 import type { AppStore } from "./store/store";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -324,6 +336,82 @@ const createAuditLogDetailLoader =
     return null;
   };
 
+/** Load the full realm catalog once; callers that need it await this. */
+const loadRealmCatalog = async (store: AppStore) => {
+  if (selectRealmOptions(store.getState()).length > 0) {
+    return;
+  }
+  await store
+    .dispatch(fetchRealmOptions())
+    .unwrap()
+    .catch(() => undefined);
+};
+
+/**
+ * Landing: resolve the default realm so the shell pill and the scoped sidebar
+ * links are correct the moment the global overview renders.
+ */
+const createOverviewLoader = (store: AppStore) => async () => {
+  await bootstrap();
+  await loadRealmCatalog(store);
+  await store.dispatch(resolveActiveRealm());
+  return null;
+};
+
+/**
+ * Guard for `/:realmId/...`: validate the path realm against the catalog and
+ * mirror it into the store. An unknown id never renders scoped data.
+ */
+const createRealmGuardLoader =
+  (store: AppStore) =>
+  async ({ params }: LoaderFunctionArgs) => {
+    await bootstrap();
+    await loadRealmCatalog(store);
+    const realm = selectRealmOptions(store.getState()).find(
+      (option) => option.id === params.realmId,
+    );
+    if (!realm) {
+      return redirect("/realms");
+    }
+    if (selectActiveRealmId(store.getState()) !== realm.id) {
+      store.dispatch(setActiveRealm(realm));
+    }
+    return null;
+  };
+
+/**
+ * Unprefixed scoped paths (`/clients`, `/clients/:id`) predate realm scoping.
+ * Redirect them under the active realm; when no realm can be resolved, fall
+ * back to `/realms`. The path comes from the request rather than the splat
+ * param so the bare root (`/clients`, no splat) redirects too.
+ */
+const createUnscopedRedirectLoader =
+  (store: AppStore) =>
+  async ({ request }: LoaderFunctionArgs) => {
+    await bootstrap();
+    const { pathname, search } = new URL(request.url);
+    const splat = pathname.replace(/^\/+/, "");
+    await loadRealmCatalog(store);
+    if (selectActiveRealmId(store.getState()) === null) {
+      await store.dispatch(resolveActiveRealm());
+    }
+    const realmId = selectActiveRealmId(store.getState());
+    if (realmId === null) {
+      return redirect("/realms");
+    }
+    return redirect(`/${realmId}/${splat}${search}`);
+  };
+
+/**
+ * Passes the shell outlet context through the realm-scoped layout route.
+ * React Router's `<Outlet/>` without an explicit `context` resets the outlet
+ * context to `undefined`, so scoped pages would lose the active realm.
+ */
+const RealmScopedOutlet = () => {
+  const context = useOutletContext<ShellOutletContext>();
+  return <Outlet context={context} />;
+};
+
 const createLoginAction = (store: AppStore) => () => {
   // The backend serves the login form; this is a full-page redirect.
   store.dispatch(requestLogin());
@@ -336,6 +424,9 @@ export const createRoutes = (store: AppStore) => {
   const loaders = {
     realmsList: createRealmsListLoader(store),
     realmDetail: createRealmDetailLoader(store),
+    overview: createOverviewLoader(store),
+    realmGuard: createRealmGuardLoader(store),
+    unscopedRedirect: createUnscopedRedirectLoader(store),
     clientsList: createClientsListLoader(store),
     clientDetail: createClientDetailLoader(store),
     usersList: createUsersListLoader(store),
@@ -365,7 +456,11 @@ export const createRoutes = (store: AppStore) => {
           loader: requireAdmin,
           element: <Layout />,
           children: [
-            { path: "overview", element: <Overview /> },
+            {
+              path: "overview",
+              loader: loaders.overview,
+              element: <Overview />,
+            },
             { path: "realms", loader: loaders.realmsList, element: <Realms /> },
             {
               path: "realms/:id",
@@ -373,53 +468,90 @@ export const createRoutes = (store: AppStore) => {
               element: <RealmDetail />,
             },
             {
-              path: "clients",
-              loader: loaders.clientsList,
-              element: <Clients />,
+              // Realm-scoped tree: the guard validates `:realmId` and mirrors
+              // it into the store before any scoped screen loads (ADR-0005).
+              path: ":realmId",
+              loader: loaders.realmGuard,
+              element: <RealmScopedOutlet />,
+              children: [
+                {
+                  path: "clients",
+                  loader: loaders.clientsList,
+                  element: <Clients />,
+                },
+                {
+                  path: "clients/:id",
+                  loader: loaders.clientDetail,
+                  element: <ClientDetail />,
+                },
+                {
+                  path: "users",
+                  loader: loaders.usersList,
+                  element: <Users />,
+                },
+                {
+                  path: "users/:id",
+                  loader: loaders.userDetail,
+                  element: <UserDetail />,
+                },
+                {
+                  path: "roles",
+                  loader: loaders.rolesList,
+                  element: <Roles />,
+                },
+                {
+                  path: "roles/:id",
+                  loader: loaders.roleDetail,
+                  element: <RoleDetail />,
+                },
+                {
+                  path: "sessions",
+                  loader: loaders.sessionsList,
+                  element: <Sessions />,
+                },
+                {
+                  path: "logins",
+                  loader: loaders.loginsList,
+                  element: <Logins />,
+                },
+                {
+                  path: "offline-sessions",
+                  loader: loaders.offlineSessionsList,
+                  element: <OfflineSessions />,
+                },
+                {
+                  path: "offline-sessions/:id",
+                  loader: loaders.offlineSessionDetail,
+                  element: <OfflineSessionDetail />,
+                },
+                {
+                  path: "audit-logs",
+                  loader: loaders.auditLogsList,
+                  element: <AuditLogs />,
+                },
+                {
+                  path: "audit-logs/:id",
+                  loader: loaders.auditLogDetail,
+                  element: <AuditLogDetail />,
+                },
+              ],
             },
-            {
-              path: "clients/:id",
-              loader: loaders.clientDetail,
-              element: <ClientDetail />,
-            },
-            { path: "users", loader: loaders.usersList, element: <Users /> },
-            {
-              path: "users/:id",
-              loader: loaders.userDetail,
-              element: <UserDetail />,
-            },
-            { path: "roles", loader: loaders.rolesList, element: <Roles /> },
-            {
-              path: "roles/:id",
-              loader: loaders.roleDetail,
-              element: <RoleDetail />,
-            },
-            {
-              path: "sessions",
-              loader: loaders.sessionsList,
-              element: <Sessions />,
-            },
-            { path: "logins", loader: loaders.loginsList, element: <Logins /> },
-            {
-              path: "offline-sessions",
-              loader: loaders.offlineSessionsList,
-              element: <OfflineSessions />,
-            },
-            {
-              path: "offline-sessions/:id",
-              loader: loaders.offlineSessionDetail,
-              element: <OfflineSessionDetail />,
-            },
-            {
-              path: "audit-logs",
-              loader: loaders.auditLogsList,
-              element: <AuditLogs />,
-            },
-            {
-              path: "audit-logs/:id",
-              loader: loaders.auditLogDetail,
-              element: <AuditLogDetail />,
-            },
+            // Unprefixed scoped paths (`/clients`, `/clients/:id`) redirect
+            // into the active realm. The static prefix outranks the dynamic
+            // `:realmId` route, so `/clients` is never read as a realm id.
+            ...SCOPED_ROOTS.flatMap((root) => [
+              {
+                path: root,
+                loader: loaders.unscopedRedirect,
+                element: <NotFound />,
+              },
+              {
+                path: `${root}/*`,
+                loader: loaders.unscopedRedirect,
+                element: <NotFound />,
+              },
+            ]),
+            { path: "*", element: <NotFound /> },
           ],
         },
         {
@@ -429,7 +561,6 @@ export const createRoutes = (store: AppStore) => {
           element: <Login />,
         },
         { path: "forbidden", element: <Forbidden /> },
-        { path: "*", element: <NotFound /> },
       ],
     },
   ];

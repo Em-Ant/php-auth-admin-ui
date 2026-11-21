@@ -1,6 +1,14 @@
 import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 import { mockServer, resetMockDb } from "@/mocks/server";
 import { renderRoute } from "@/test/render-route";
 
@@ -31,33 +39,47 @@ const ADMIN_ROLE_ID = "r0000000-0000-0000-0000-000000000001";
 
 describe("roles flow", () => {
   it("lists roles with scope badges", async () => {
-    renderRoute("/roles");
+    renderRoute(`/${TEST_REALM}/roles`);
 
-    expect(await screen.findByRole("link", { name: "admin" })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("link", { name: "admin" }),
+    ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "viewer" })).toBeInTheDocument();
   });
 
   it("creates a realm role", async () => {
     const user = userEvent.setup();
-    renderRoute("/roles");
+    renderRoute(`/${TEST_REALM}/roles`);
 
-    await user.click(await screen.findByRole("button", { name: "Create role" }));
+    await user.click(
+      await screen.findByRole("button", { name: "Create role" }),
+    );
     const dialog = await screen.findByRole("dialog");
-    await user.selectOptions(within(dialog).getByLabelText("Realm"), [TEST_REALM]);
+    await user.selectOptions(within(dialog).getByLabelText("Realm"), [
+      TEST_REALM,
+    ]);
     await user.type(within(dialog).getByLabelText("Name"), "auditor");
-    await user.click(within(dialog).getByRole("button", { name: "Create role" }));
+    await user.click(
+      within(dialog).getByRole("button", { name: "Create role" }),
+    );
 
-    expect(await screen.findByRole("link", { name: "auditor" })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("link", { name: "auditor" }),
+    ).toBeInTheDocument();
   });
 
   it("shows the delete guard message for assigned roles", async () => {
     const user = userEvent.setup();
-    renderRoute(`/roles/${ADMIN_ROLE_ID}`);
+    renderRoute(`/${TEST_REALM}/roles/${ADMIN_ROLE_ID}`);
 
-    expect(await screen.findByRole("heading", { name: "admin" })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", { name: "admin" }),
+    ).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Delete role" }));
     const confirm = await screen.findByRole("alertdialog");
-    await user.click(within(confirm).getByRole("button", { name: "Delete role" }));
+    await user.click(
+      within(confirm).getByRole("button", { name: "Delete role" }),
+    );
 
     expect(
       await screen.findByText(

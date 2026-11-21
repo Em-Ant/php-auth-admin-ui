@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Link, useSearchParams } from "react-router";
+import { Link, useOutletContext, useSearchParams } from "react-router";
+import type { ShellOutletContext } from "@/app/layout";
 import {
   fetchAuditLogs,
   selectAuditLogsItems,
@@ -8,7 +9,7 @@ import {
   selectAuditLogsPage,
 } from "@/entities/audit-logs";
 import { selectRealmsItems } from "@/entities/realms";
-import { useAppDispatch, useAppSelector } from "@/shared/lib";
+import { realmPath, useAppDispatch, useAppSelector } from "@/shared/lib";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent } from "@/shared/ui/card";
@@ -51,6 +52,7 @@ const TARGET_TYPES = ["realm", "client", "user", "role", "scope_role"];
 
 export const AuditLogs = () => {
   const dispatch = useAppDispatch();
+  const { activeRealmId } = useOutletContext<ShellOutletContext>();
   const [searchParams, setSearchParams] = useSearchParams();
   const params = readAuditLogsListParams(searchParams);
   const items = useAppSelector(selectAuditLogsItems);
@@ -214,7 +216,10 @@ export const AuditLogs = () => {
                     <TableRow key={entry.id}>
                       <TableCell>
                         <Link
-                          to={`/audit-logs/${entry.id}`}
+                          to={realmPath(
+                            activeRealmId,
+                            `/audit-logs/${entry.id}`,
+                          )}
                           className="font-medium text-primary underline-offset-4 hover:underline"
                         >
                           {entry.action}

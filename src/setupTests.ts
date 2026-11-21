@@ -1,6 +1,10 @@
-import { cleanup } from "@testing-library/react";
+import { cleanup, configure } from "@testing-library/react";
 import { afterEach, vi } from "vitest";
 import "@testing-library/jest-dom";
+
+// Integration tests wait on loader -> thunk -> MSW round trips. Under a full
+// parallel run the 1s default is too tight, so give async finders more room.
+configure({ asyncUtilTimeout: 5000 });
 
 // jsdom does not implement ResizeObserver; Radix primitives (Switch, Select,
 // and friends) measure with it on mount.

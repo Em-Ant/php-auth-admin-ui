@@ -1,6 +1,6 @@
 # 0005 — Active realm context
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-11-01
 
 ## Context
@@ -105,6 +105,11 @@ Neither adds a migration, route prefix, or per-realm authorization.
 - `NavItem.href` stops being a static string — it becomes a function of the
   active realm. Landing on `/` must resolve a realm before the sidebar links are
   meaningful.
+- In-page links follow the URL: the shell hands the active realm id to pages
+  through the outlet context (`ShellOutletContext`), and pages build scoped
+  targets with the shared `realmPath` helper, so they never import the app slice
+  (ADR-0003). The `:realmId` layout route forwards that context, because a bare
+  `<Outlet/>` resets it.
 - The realm switcher is the only screen that needs the full realm list, so the
   200-option cap stops being a filter hazard for clients/users/roles.
 - Integration tests that navigate bare paths (`renderRoute("/clients")`) must

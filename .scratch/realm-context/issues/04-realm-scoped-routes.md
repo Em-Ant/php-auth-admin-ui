@@ -1,6 +1,6 @@
 # 04 — Realm-scoped routes and navigation
 
-- **Status:** Todo
+- **Status:** Done
 - **Depends on:** 01
 - **Blocks:** 05
 
@@ -47,3 +47,22 @@ the heavy issue and may be split if it grows.
 ## Out of scope
 
 Passing `realm_id` into thunks and removing realm selectors (issue 05).
+
+## Notes
+
+- **Unprefixed redirects.** Bare scoped paths (`/clients`, `/clients/:id`)
+  redirect under the active realm. They are registered as static per-root routes
+  (`clients` and `clients/*`) because the static prefix outranks the dynamic
+  `:realmId` route; a lone `*` splat loses to `:realmId` and misreads `clients`
+  as a realm id. The loader takes the path from `request.url` (the bare root has
+  no splat param). Unknown realm ids redirect to `/realms`.
+- **Outlet context.** React Router's `<Outlet/>` resets the outlet context to
+  `undefined` when no `context` prop is given, so the `:realmId` layout route
+  renders a `RealmScopedOutlet` that forwards `ShellOutletContext`.
+- **In-page links.** List/detail pages scope their links with the shared
+  `realmPath(activeRealmId, path)` helper and read `activeRealmId` from the
+  outlet context, so they never import `app/model/realm` (ADR-0003).
+- **Test infra.** Integration tests now render realm-prefixed URLs; default
+  suite timeouts were raised (`testTimeout: 15000`, `asyncUtilTimeout: 5000`)
+  because jsdom + MSW round trips exceed the old 1s finder default under a
+  parallel run.

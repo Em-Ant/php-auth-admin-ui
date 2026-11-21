@@ -1,6 +1,7 @@
 import { ArrowLeft, Pencil, Plus, Trash2 } from "lucide-react";
 import { type ReactNode, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router";
+import { Link, useNavigate, useOutletContext, useParams } from "react-router";
+import type { ShellOutletContext } from "@/app/layout";
 import {
   addScopeRoleThunk,
   deleteClientThunk,
@@ -15,7 +16,7 @@ import {
 } from "@/entities/clients";
 import { selectRealmsItems } from "@/entities/realms";
 import { selectRolesItems } from "@/entities/roles";
-import { useAppDispatch, useAppSelector } from "@/shared/lib";
+import { realmPath, useAppDispatch, useAppSelector } from "@/shared/lib";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import {
@@ -55,6 +56,7 @@ export const ClientDetail = () => {
   const { id = "" } = useParams();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const { activeRealmId } = useOutletContext<ShellOutletContext>();
   const detail = useAppSelector(selectClientDetail);
   const status = useAppSelector(selectClientDetailStatus);
   const error = useAppSelector(selectClientDetailError);
@@ -95,7 +97,7 @@ export const ClientDetail = () => {
         </CardHeader>
         <CardContent>
           <Button asChild variant="outline" size="sm">
-            <Link to="/clients">
+            <Link to={realmPath(activeRealmId, "/clients")}>
               <ArrowLeft />
               Back to clients
             </Link>
@@ -114,7 +116,7 @@ export const ClientDetail = () => {
         </CardHeader>
         <CardContent>
           <Button asChild variant="outline" size="sm">
-            <Link to="/clients">
+            <Link to={realmPath(activeRealmId, "/clients")}>
               <ArrowLeft />
               Back to clients
             </Link>
@@ -154,7 +156,7 @@ export const ClientDetail = () => {
       <div className="flex items-start justify-between gap-4">
         <div>
           <Button asChild variant="ghost" size="sm" className="-ml-2">
-            <Link to="/clients">
+            <Link to={realmPath(activeRealmId, "/clients")}>
               <ArrowLeft />
               Clients
             </Link>
@@ -299,7 +301,7 @@ export const ClientDetail = () => {
         description="The client is deleted permanently. Active logins and offline sessions block the delete."
         confirmLabel="Delete client"
         onConfirm={() => dispatch(deleteClientThunk(id)).unwrap()}
-        onDone={() => void navigate("/clients")}
+        onDone={() => void navigate(realmPath(activeRealmId, "/clients"))}
       />
       <AddScopeRoleDialog
         open={mappingOpen}

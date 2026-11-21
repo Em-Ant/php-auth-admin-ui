@@ -1,6 +1,7 @@
 import { Plus } from "lucide-react";
 import { useState } from "react";
-import { Link, useSearchParams } from "react-router";
+import { Link, useOutletContext, useSearchParams } from "react-router";
+import type { ShellOutletContext } from "@/app/layout";
 import { selectRealmsItems } from "@/entities/realms";
 import {
   fetchUsers,
@@ -9,7 +10,7 @@ import {
   selectUsersListStatus,
   selectUsersPage,
 } from "@/entities/users";
-import { useAppDispatch, useAppSelector } from "@/shared/lib";
+import { realmPath, useAppDispatch, useAppSelector } from "@/shared/lib";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent } from "@/shared/ui/card";
@@ -30,6 +31,7 @@ import { CreateUserDialog } from "./UserDialogs";
 
 export const Users = () => {
   const dispatch = useAppDispatch();
+  const { activeRealmId } = useOutletContext<ShellOutletContext>();
   const [searchParams, setSearchParams] = useSearchParams();
   const params = readUsersListParams(searchParams);
   const items = useAppSelector(selectUsersItems);
@@ -155,7 +157,7 @@ export const Users = () => {
                     <TableRow key={user.id}>
                       <TableCell>
                         <Link
-                          to={`/users/${user.id}`}
+                          to={realmPath(activeRealmId, `/users/${user.id}`)}
                           className="font-medium text-primary underline-offset-4 hover:underline"
                         >
                           {user.email}

@@ -1,6 +1,14 @@
 import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 import { mockServer, resetMockDb } from "@/mocks/server";
 import { renderRoute } from "@/test/render-route";
 
@@ -31,7 +39,7 @@ const ADA_USER = "u0000000-0000-0000-0000-000000000001";
 
 describe("sessions flow", () => {
   it("lists sessions with status badges", async () => {
-    renderRoute("/sessions");
+    renderRoute(`/${TEST_REALM}/sessions`);
 
     const table = await screen.findByRole("table");
     expect(within(table).getByText("ada@example.com")).toBeInTheDocument();
@@ -41,29 +49,41 @@ describe("sessions flow", () => {
 
   it("revokes an active session", async () => {
     const user = userEvent.setup();
-    renderRoute("/sessions");
+    renderRoute(`/${TEST_REALM}/sessions`);
 
     const table = await screen.findByRole("table");
     const row = within(table).getByText("ada@example.com").closest("tr");
     expect(row).not.toBeNull();
-    await user.click(within(row as HTMLElement).getByRole("button", { name: "Revoke" }));
+    await user.click(
+      within(row as HTMLElement).getByRole("button", { name: "Revoke" }),
+    );
 
     const confirm = await screen.findByRole("alertdialog");
-    await user.click(within(confirm).getByRole("button", { name: "Revoke session" }));
+    await user.click(
+      within(confirm).getByRole("button", { name: "Revoke session" }),
+    );
 
-    expect(await within(row as HTMLElement).findByText("EXPIRED")).toBeInTheDocument();
+    expect(
+      await within(row as HTMLElement).findByText("EXPIRED"),
+    ).toBeInTheDocument();
   });
 
   it("invalidates sessions for a user", async () => {
     const user = userEvent.setup();
-    renderRoute("/sessions");
+    renderRoute(`/${TEST_REALM}/sessions`);
 
-    await user.selectOptions(await screen.findByLabelText("Realm"), [TEST_REALM]);
+    await user.selectOptions(await screen.findByLabelText("Realm"), [
+      TEST_REALM,
+    ]);
     await user.click(screen.getByRole("button", { name: "Invalidate…" }));
     const dialog = await screen.findByRole("dialog");
     await user.selectOptions(within(dialog).getByLabelText("User"), [ADA_USER]);
-    await user.click(within(dialog).getByRole("button", { name: "Invalidate" }));
+    await user.click(
+      within(dialog).getByRole("button", { name: "Invalidate" }),
+    );
 
-    expect(await screen.findByText("Invalidated 2 sessions.")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Invalidated 2 sessions."),
+    ).toBeInTheDocument();
   });
 });

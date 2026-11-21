@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Link, useSearchParams } from "react-router";
+import { Link, useOutletContext, useSearchParams } from "react-router";
+import type { ShellOutletContext } from "@/app/layout";
 import { selectClientsItems } from "@/entities/clients";
 import {
   fetchOfflineSessions,
@@ -11,7 +12,7 @@ import {
 } from "@/entities/offline-sessions";
 import { selectRealmsItems } from "@/entities/realms";
 import { selectUsersItems } from "@/entities/users";
-import { useAppDispatch, useAppSelector } from "@/shared/lib";
+import { realmPath, useAppDispatch, useAppSelector } from "@/shared/lib";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent } from "@/shared/ui/card";
@@ -31,6 +32,7 @@ import { readOfflineSessionsListParams } from "./params";
 
 export const OfflineSessions = () => {
   const dispatch = useAppDispatch();
+  const { activeRealmId } = useOutletContext<ShellOutletContext>();
   const [searchParams, setSearchParams] = useSearchParams();
   const params = readOfflineSessionsListParams(searchParams);
   const items = useAppSelector(selectOfflineSessionsItems);
@@ -167,7 +169,10 @@ export const OfflineSessions = () => {
                     <TableRow key={session.id}>
                       <TableCell>
                         <Link
-                          to={`/offline-sessions/${session.id}`}
+                          to={realmPath(
+                            activeRealmId,
+                            `/offline-sessions/${session.id}`,
+                          )}
                           className="font-medium text-primary underline-offset-4 hover:underline"
                         >
                           {emailOf(session.user_id)}

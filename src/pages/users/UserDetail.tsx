@@ -1,6 +1,7 @@
 import { ArrowLeft, Pencil, Plus, Trash2 } from "lucide-react";
 import { type ReactNode, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router";
+import { Link, useNavigate, useOutletContext, useParams } from "react-router";
+import type { ShellOutletContext } from "@/app/layout";
 import { selectRealmsItems } from "@/entities/realms";
 import { selectRolesItems } from "@/entities/roles";
 import {
@@ -13,7 +14,7 @@ import {
   selectUserDetailStatus,
   selectUserRoles,
 } from "@/entities/users";
-import { useAppDispatch, useAppSelector } from "@/shared/lib";
+import { realmPath, useAppDispatch, useAppSelector } from "@/shared/lib";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import {
@@ -52,6 +53,7 @@ export const UserDetail = () => {
   const { id = "" } = useParams();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const { activeRealmId } = useOutletContext<ShellOutletContext>();
   const detail = useAppSelector(selectUserDetail);
   const status = useAppSelector(selectUserDetailStatus);
   const error = useAppSelector(selectUserDetailError);
@@ -88,7 +90,7 @@ export const UserDetail = () => {
         </CardHeader>
         <CardContent>
           <Button asChild variant="outline" size="sm">
-            <Link to="/users">
+            <Link to={realmPath(activeRealmId, "/users")}>
               <ArrowLeft />
               Back to users
             </Link>
@@ -107,7 +109,7 @@ export const UserDetail = () => {
         </CardHeader>
         <CardContent>
           <Button asChild variant="outline" size="sm">
-            <Link to="/users">
+            <Link to={realmPath(activeRealmId, "/users")}>
               <ArrowLeft />
               Back to users
             </Link>
@@ -135,7 +137,7 @@ export const UserDetail = () => {
       <div className="flex items-start justify-between gap-4">
         <div>
           <Button asChild variant="ghost" size="sm" className="-ml-2">
-            <Link to="/users">
+            <Link to={realmPath(activeRealmId, "/users")}>
               <ArrowLeft />
               Users
             </Link>
@@ -273,7 +275,7 @@ export const UserDetail = () => {
         description="The user is deleted permanently. Active sessions and offline sessions block the delete."
         confirmLabel="Delete user"
         onConfirm={() => dispatch(deleteUserThunk(id)).unwrap()}
-        onDone={() => void navigate("/users")}
+        onDone={() => void navigate(realmPath(activeRealmId, "/users"))}
       />
       <AssignRoleDialog
         userId={id}

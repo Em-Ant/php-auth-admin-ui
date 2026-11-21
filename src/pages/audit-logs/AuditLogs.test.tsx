@@ -1,6 +1,14 @@
 import { fireEvent, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 import { mockServer, resetMockDb } from "@/mocks/server";
 import { renderRoute } from "@/test/render-route";
 
@@ -26,17 +34,23 @@ beforeAll(() => mockServer.listen({ onUnhandledFrame: "error" }));
 beforeEach(() => resetMockDb());
 afterAll(() => mockServer.close());
 
+const TEST_REALM = "11111111-1111-1111-1111-111111111111";
+
 describe("audit logs flow", () => {
   it("lists entries with action links", async () => {
-    renderRoute("/audit-logs");
+    renderRoute(`/${TEST_REALM}/audit-logs`);
 
-    expect(await screen.findByRole("link", { name: "user.create" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "client.create" })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("link", { name: "user.create" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "client.create" }),
+    ).toBeInTheDocument();
   });
 
   it("shows the entry detail", async () => {
     const user = userEvent.setup();
-    renderRoute("/audit-logs");
+    renderRoute(`/${TEST_REALM}/audit-logs`);
 
     await user.click(await screen.findByRole("link", { name: "user.create" }));
 
@@ -46,11 +60,13 @@ describe("audit logs flow", () => {
 
   it("refuses an unbounded purge and purges with a cutoff", async () => {
     const user = userEvent.setup();
-    renderRoute("/audit-logs");
+    renderRoute(`/${TEST_REALM}/audit-logs`);
 
     await user.click(await screen.findByRole("button", { name: "Purge…" }));
     const dialog = await screen.findByRole("dialog");
-    await user.click(within(dialog).getByRole("button", { name: "Purge entries" }));
+    await user.click(
+      within(dialog).getByRole("button", { name: "Purge entries" }),
+    );
 
     expect(
       await within(dialog).findByText(/never be unbounded/),
@@ -59,9 +75,13 @@ describe("audit logs flow", () => {
     fireEvent.change(within(dialog).getByLabelText("Older than"), {
       target: { value: "2027-01-01" },
     });
-    await user.click(within(dialog).getByRole("button", { name: "Purge entries" }));
+    await user.click(
+      within(dialog).getByRole("button", { name: "Purge entries" }),
+    );
 
     expect(await screen.findByText("Purged 3 entries.")).toBeInTheDocument();
-    expect(await screen.findByText("No entries match these filters.")).toBeInTheDocument();
+    expect(
+      await screen.findByText("No entries match these filters."),
+    ).toBeInTheDocument();
   });
 });

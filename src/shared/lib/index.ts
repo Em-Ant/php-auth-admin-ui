@@ -1,4 +1,4 @@
-export { isAbsolute, join } from "./path";
+export { isAbsolute, join, realmPath } from "./path";
 export {
   addAppListener,
   useAppDispatch,
