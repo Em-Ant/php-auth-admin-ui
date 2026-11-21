@@ -46,6 +46,7 @@ import { RoleDetail, Roles, readRolesListParams } from "@/pages/roles";
 import { readSessionsListParams, Sessions } from "@/pages/sessions";
 import { readUsersListParams, UserDetail, Users } from "@/pages/users";
 import { ADMIN_ROLE, getUser, hasRole, isAuthenticated } from "@/shared/auth";
+import { realmScope } from "@/shared/lib";
 import { Loader } from "@/shared/ui/Loader";
 import bootstrap from "./bootstrap";
 import { ErrorPage } from "./error";
@@ -127,12 +128,14 @@ const createRealmDetailLoader =
 
 const createClientsListLoader =
   (store: AppStore) =>
-  async ({ request }: LoaderFunctionArgs) => {
+  async ({ params, request }: LoaderFunctionArgs) => {
     await bootstrap();
     store.dispatch(
-      fetchClients(readClientsListParams(new URL(request.url).searchParams)),
+      fetchClients({
+        ...readClientsListParams(new URL(request.url).searchParams),
+        ...realmScope(params.realmId),
+      }),
     );
-    store.dispatch(fetchRealms({ limit: CATALOG_LIMIT, offset: 0 }));
     return null;
   };
 
@@ -147,8 +150,9 @@ const createClientDetailLoader =
       .dispatch(fetchClientById(params.id))
       .unwrap()
       .catch(() => null);
-    store.dispatch(fetchRealms({ limit: CATALOG_LIMIT, offset: 0 }));
     if (client) {
+      // The realm scope backs the scope picker when the client inherits it.
+      store.dispatch(fetchRealmById(client.realm_id));
       store.dispatch(fetchScopeRoles(client.id));
       store.dispatch(
         fetchRoles({
@@ -163,12 +167,14 @@ const createClientDetailLoader =
 
 const createUsersListLoader =
   (store: AppStore) =>
-  async ({ request }: LoaderFunctionArgs) => {
+  async ({ params, request }: LoaderFunctionArgs) => {
     await bootstrap();
     store.dispatch(
-      fetchUsers(readUsersListParams(new URL(request.url).searchParams)),
+      fetchUsers({
+        ...readUsersListParams(new URL(request.url).searchParams),
+        ...realmScope(params.realmId),
+      }),
     );
-    store.dispatch(fetchRealms({ limit: CATALOG_LIMIT, offset: 0 }));
     return null;
   };
 
@@ -183,7 +189,6 @@ const createUserDetailLoader =
       .dispatch(fetchUserById(params.id))
       .unwrap()
       .catch(() => null);
-    store.dispatch(fetchRealms({ limit: CATALOG_LIMIT, offset: 0 }));
     if (user) {
       store.dispatch(fetchUserRoles(user.id));
       store.dispatch(
@@ -199,15 +204,18 @@ const createUserDetailLoader =
 
 const createRolesListLoader =
   (store: AppStore) =>
-  async ({ request }: LoaderFunctionArgs) => {
+  async ({ params, request }: LoaderFunctionArgs) => {
     await bootstrap();
-    const params = readRolesListParams(new URL(request.url).searchParams);
-    store.dispatch(fetchRoles(params));
-    store.dispatch(fetchRealms({ limit: CATALOG_LIMIT, offset: 0 }));
-    if (params.realm_id) {
+    store.dispatch(
+      fetchRoles({
+        ...readRolesListParams(new URL(request.url).searchParams),
+        ...realmScope(params.realmId),
+      }),
+    );
+    if (params.realmId) {
       store.dispatch(
         fetchClients({
-          realm_id: params.realm_id,
+          realm_id: params.realmId,
           limit: CATALOG_LIMIT,
           offset: 0,
         }),
@@ -227,7 +235,6 @@ const createRoleDetailLoader =
       .dispatch(fetchRoleById(params.id))
       .unwrap()
       .catch(() => null);
-    store.dispatch(fetchRealms({ limit: CATALOG_LIMIT, offset: 0 }));
     if (role) {
       store.dispatch(
         fetchClients({
@@ -242,42 +249,77 @@ const createRoleDetailLoader =
 
 const createSessionsListLoader =
   (store: AppStore) =>
-  async ({ request }: LoaderFunctionArgs) => {
+  async ({ params, request }: LoaderFunctionArgs) => {
     await bootstrap();
-    const params = readSessionsListParams(new URL(request.url).searchParams);
-    store.dispatch(fetchSessions(params));
-    store.dispatch(fetchRealms({ limit: CATALOG_LIMIT, offset: 0 }));
-    // Name resolution for the user/client columns needs the catalogs even
-    // without a realm filter.
-    store.dispatch(fetchUsers({ limit: CATALOG_LIMIT, offset: 0 }));
-    store.dispatch(fetchClients({ limit: CATALOG_LIMIT, offset: 0 }));
+    store.dispatch(
+      fetchSessions({
+        ...readSessionsListParams(new URL(request.url).searchParams),
+        ...realmScope(params.realmId),
+      }),
+    );
+    // Name resolution for the user column needs the realm's users.
+    if (params.realmId) {
+      store.dispatch(
+        fetchUsers({
+          realm_id: params.realmId,
+          limit: CATALOG_LIMIT,
+          offset: 0,
+        }),
+      );
+    }
     return null;
   };
 
 const createLoginsListLoader =
   (store: AppStore) =>
-  async ({ request }: LoaderFunctionArgs) => {
+  async ({ params, request }: LoaderFunctionArgs) => {
     await bootstrap();
-    const params = readLoginsListParams(new URL(request.url).searchParams);
-    store.dispatch(fetchLogins(params));
-    store.dispatch(fetchRealms({ limit: CATALOG_LIMIT, offset: 0 }));
-    store.dispatch(fetchClients({ limit: CATALOG_LIMIT, offset: 0 }));
+    store.dispatch(
+      fetchLogins({
+        ...readLoginsListParams(new URL(request.url).searchParams),
+        ...realmScope(params.realmId),
+      }),
+    );
+    // Name resolution for the client column needs the realm's clients.
+    if (params.realmId) {
+      store.dispatch(
+        fetchClients({
+          realm_id: params.realmId,
+          limit: CATALOG_LIMIT,
+          offset: 0,
+        }),
+      );
+    }
     return null;
   };
 
 const createOfflineSessionsListLoader =
   (store: AppStore) =>
-  async ({ request }: LoaderFunctionArgs) => {
+  async ({ params, request }: LoaderFunctionArgs) => {
     await bootstrap();
-    const params = readOfflineSessionsListParams(
-      new URL(request.url).searchParams,
+    store.dispatch(
+      fetchOfflineSessions({
+        ...readOfflineSessionsListParams(new URL(request.url).searchParams),
+        ...realmScope(params.realmId),
+      }),
     );
-    store.dispatch(fetchOfflineSessions(params));
-    store.dispatch(fetchRealms({ limit: CATALOG_LIMIT, offset: 0 }));
-    // Name resolution for the user/client columns needs the catalogs even
-    // without a realm filter.
-    store.dispatch(fetchUsers({ limit: CATALOG_LIMIT, offset: 0 }));
-    store.dispatch(fetchClients({ limit: CATALOG_LIMIT, offset: 0 }));
+    // Name resolution for the user/client columns needs the realm's catalogs.
+    if (params.realmId) {
+      store.dispatch(
+        fetchUsers({
+          realm_id: params.realmId,
+          limit: CATALOG_LIMIT,
+          offset: 0,
+        }),
+      );
+      store.dispatch(
+        fetchClients({
+          realm_id: params.realmId,
+          limit: CATALOG_LIMIT,
+          offset: 0,
+        }),
+      );
+    }
     return null;
   };
 
@@ -292,7 +334,6 @@ const createOfflineSessionDetailLoader =
       .dispatch(fetchOfflineSessionById(params.id))
       .unwrap()
       .catch(() => null);
-    store.dispatch(fetchRealms({ limit: CATALOG_LIMIT, offset: 0 }));
     if (session) {
       store.dispatch(
         fetchUsers({
@@ -314,14 +355,14 @@ const createOfflineSessionDetailLoader =
 
 const createAuditLogsListLoader =
   (store: AppStore) =>
-  async ({ request }: LoaderFunctionArgs) => {
+  async ({ params, request }: LoaderFunctionArgs) => {
     await bootstrap();
     store.dispatch(
-      fetchAuditLogs(
-        readAuditLogsListParams(new URL(request.url).searchParams),
-      ),
+      fetchAuditLogs({
+        ...readAuditLogsListParams(new URL(request.url).searchParams),
+        ...realmScope(params.realmId),
+      }),
     );
-    store.dispatch(fetchRealms({ limit: CATALOG_LIMIT, offset: 0 }));
     return null;
   };
 
@@ -332,7 +373,6 @@ const createAuditLogDetailLoader =
     if (params.id) {
       store.dispatch(fetchAuditLogById(params.id));
     }
-    store.dispatch(fetchRealms({ limit: CATALOG_LIMIT, offset: 0 }));
     return null;
   };
 

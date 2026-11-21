@@ -9,6 +9,7 @@ import {
   it,
   vi,
 } from "vitest";
+import { getMockDb } from "@/mocks/db";
 import { mockServer, resetMockDb } from "@/mocks/server";
 import { renderRoute } from "@/test/render-route";
 
@@ -47,7 +48,7 @@ describe("roles flow", () => {
     expect(screen.getByRole("link", { name: "viewer" })).toBeInTheDocument();
   });
 
-  it("creates a realm role", async () => {
+  it("creates a realm role in the active realm", async () => {
     const user = userEvent.setup();
     renderRoute(`/${TEST_REALM}/roles`);
 
@@ -55,9 +56,6 @@ describe("roles flow", () => {
       await screen.findByRole("button", { name: "Create role" }),
     );
     const dialog = await screen.findByRole("dialog");
-    await user.selectOptions(within(dialog).getByLabelText("Realm"), [
-      TEST_REALM,
-    ]);
     await user.type(within(dialog).getByLabelText("Name"), "auditor");
     await user.click(
       within(dialog).getByRole("button", { name: "Create role" }),
@@ -66,6 +64,9 @@ describe("roles flow", () => {
     expect(
       await screen.findByRole("link", { name: "auditor" }),
     ).toBeInTheDocument();
+    expect(
+      getMockDb().roles.find((role) => role.name === "auditor")?.realm_id,
+    ).toBe(TEST_REALM);
   });
 
   it("shows the delete guard message for assigned roles", async () => {

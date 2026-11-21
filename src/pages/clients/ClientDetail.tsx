@@ -14,7 +14,7 @@ import {
   selectClientScopeRoles,
   toggleScopeRoleThunk,
 } from "@/entities/clients";
-import { selectRealmsItems } from "@/entities/realms";
+import { selectRealmDetail } from "@/entities/realms";
 import { selectRolesItems } from "@/entities/roles";
 import { realmPath, useAppDispatch, useAppSelector } from "@/shared/lib";
 import { Badge } from "@/shared/ui/badge";
@@ -61,7 +61,7 @@ export const ClientDetail = () => {
   const status = useAppSelector(selectClientDetailStatus);
   const error = useAppSelector(selectClientDetailError);
   const scopeRoles = useAppSelector(selectClientScopeRoles);
-  const realms = useAppSelector(selectRealmsItems);
+  const realmDetail = useAppSelector(selectRealmDetail);
   const roles = useAppSelector(selectRolesItems);
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -127,10 +127,9 @@ export const ClientDetail = () => {
   }
 
   const realmName =
-    realms.find((realm) => realm.id === detail.realm_id)?.name ??
-    detail.realm_id;
+    realmDetail?.id === detail.realm_id ? realmDetail.name : detail.realm_id;
   const realmScope =
-    realms.find((realm) => realm.id === detail.realm_id)?.scope ?? "";
+    realmDetail?.id === detail.realm_id ? realmDetail.scope : "";
   const validScopes = (detail.scope ?? realmScope).split(" ").filter(Boolean);
   const roleOptions = roles
     .filter((role) => role.realm_id === detail.realm_id)

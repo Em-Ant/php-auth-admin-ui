@@ -8,8 +8,12 @@ import {
   selectAuditLogsListStatus,
   selectAuditLogsPage,
 } from "@/entities/audit-logs";
-import { selectRealmsItems } from "@/entities/realms";
-import { realmPath, useAppDispatch, useAppSelector } from "@/shared/lib";
+import {
+  realmPath,
+  realmScope,
+  useAppDispatch,
+  useAppSelector,
+} from "@/shared/lib";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent } from "@/shared/ui/card";
@@ -55,11 +59,11 @@ export const AuditLogs = () => {
   const { activeRealmId } = useOutletContext<ShellOutletContext>();
   const [searchParams, setSearchParams] = useSearchParams();
   const params = readAuditLogsListParams(searchParams);
+  const listParams = { ...params, ...realmScope(activeRealmId) };
   const items = useAppSelector(selectAuditLogsItems);
   const page = useAppSelector(selectAuditLogsPage);
   const status = useAppSelector(selectAuditLogsListStatus);
   const error = useAppSelector(selectAuditLogsListError);
-  const realms = useAppSelector(selectRealmsItems);
   const [purgeOpen, setPurgeOpen] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
 
@@ -103,18 +107,6 @@ export const AuditLogs = () => {
         </p>
       ) : null}
       <div className="flex flex-wrap items-end gap-3">
-        <div className="w-56">
-          <EntitySelect
-            label="Realm"
-            value={params.realm_id ?? ""}
-            onChange={(value) => updateParams({ realm_id: value || undefined })}
-            options={realms.map((realm) => ({
-              id: realm.id,
-              name: realm.name,
-            }))}
-            allLabel="All realms"
-          />
-        </div>
         <div className="w-56">
           <EntitySelect
             label="Action"
@@ -187,7 +179,7 @@ export const AuditLogs = () => {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => dispatch(fetchAuditLogs(params))}
+              onClick={() => dispatch(fetchAuditLogs(listParams))}
             >
               Retry
             </Button>
@@ -250,9 +242,10 @@ export const AuditLogs = () => {
       <PurgeDialog
         open={purgeOpen}
         onOpenChange={setPurgeOpen}
+        realmId={activeRealmId ?? ""}
         onPurged={(count) => {
           setNotice(`Purged ${count} ${count === 1 ? "entry" : "entries"}.`);
-          dispatch(fetchAuditLogs(params));
+          dispatch(fetchAuditLogs(listParams));
         }}
       />
     </div>

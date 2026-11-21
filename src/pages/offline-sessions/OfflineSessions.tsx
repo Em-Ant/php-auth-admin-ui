@@ -10,9 +10,13 @@ import {
   selectOfflineSessionsListStatus,
   selectOfflineSessionsPage,
 } from "@/entities/offline-sessions";
-import { selectRealmsItems } from "@/entities/realms";
 import { selectUsersItems } from "@/entities/users";
-import { realmPath, useAppDispatch, useAppSelector } from "@/shared/lib";
+import {
+  realmPath,
+  realmScope,
+  useAppDispatch,
+  useAppSelector,
+} from "@/shared/lib";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent } from "@/shared/ui/card";
@@ -35,11 +39,11 @@ export const OfflineSessions = () => {
   const { activeRealmId } = useOutletContext<ShellOutletContext>();
   const [searchParams, setSearchParams] = useSearchParams();
   const params = readOfflineSessionsListParams(searchParams);
+  const listParams = { ...params, ...realmScope(activeRealmId) };
   const items = useAppSelector(selectOfflineSessionsItems);
   const page = useAppSelector(selectOfflineSessionsPage);
   const status = useAppSelector(selectOfflineSessionsListStatus);
   const error = useAppSelector(selectOfflineSessionsListError);
-  const realms = useAppSelector(selectRealmsItems);
   const users = useAppSelector(selectUsersItems);
   const clients = useAppSelector(selectClientsItems);
   const [revoking, setRevoking] = useState<string | null>(null);
@@ -64,14 +68,6 @@ export const OfflineSessions = () => {
     void setSearchParams(next);
   };
 
-  const selectRealm = (value: string) => {
-    updateParams({
-      realm_id: value || undefined,
-      user_id: undefined,
-      client_id: undefined,
-    });
-  };
-
   const emailOf = (userId: string) =>
     users.find((user) => user.id === userId)?.email ?? userId;
   const clientNameOf = (clientId: string) =>
@@ -86,18 +82,6 @@ export const OfflineSessions = () => {
         </p>
       </div>
       <div className="flex flex-wrap items-end gap-3">
-        <div className="w-64">
-          <EntitySelect
-            label="Realm"
-            value={params.realm_id ?? ""}
-            onChange={selectRealm}
-            options={realms.map((realm) => ({
-              id: realm.id,
-              name: realm.name,
-            }))}
-            allLabel="All realms"
-          />
-        </div>
         <div className="w-64">
           <EntitySelect
             label="User"
@@ -137,7 +121,7 @@ export const OfflineSessions = () => {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => dispatch(fetchOfflineSessions(params))}
+              onClick={() => dispatch(fetchOfflineSessions(listParams))}
             >
               Retry
             </Button>

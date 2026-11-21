@@ -9,8 +9,12 @@ import {
   selectClientsListStatus,
   selectClientsPage,
 } from "@/entities/clients";
-import { selectRealmsItems } from "@/entities/realms";
-import { realmPath, useAppDispatch, useAppSelector } from "@/shared/lib";
+import {
+  realmPath,
+  realmScope,
+  useAppDispatch,
+  useAppSelector,
+} from "@/shared/lib";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent } from "@/shared/ui/card";
@@ -25,7 +29,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/shared/ui/table";
-import { EntitySelect } from "@/widgets/entity-select";
 import { CreateClientDialog } from "./ClientDialogs";
 import { readClientsListParams } from "./params";
 
@@ -34,11 +37,11 @@ export const Clients = () => {
   const { activeRealmId } = useOutletContext<ShellOutletContext>();
   const [searchParams, setSearchParams] = useSearchParams();
   const params = readClientsListParams(searchParams);
+  const listParams = { ...params, ...realmScope(activeRealmId) };
   const items = useAppSelector(selectClientsItems);
   const page = useAppSelector(selectClientsPage);
   const status = useAppSelector(selectClientsListStatus);
   const error = useAppSelector(selectClientsListError);
-  const realms = useAppSelector(selectRealmsItems);
   const [createOpen, setCreateOpen] = useState(false);
   const [query, setQuery] = useState(params.q ?? "");
 
@@ -78,18 +81,6 @@ export const Clients = () => {
         </Button>
       </div>
       <div className="flex flex-wrap items-end gap-3">
-        <div className="w-64">
-          <EntitySelect
-            label="Realm"
-            value={params.realm_id ?? ""}
-            onChange={(value) => updateParams({ realm_id: value || undefined })}
-            options={realms.map((realm) => ({
-              id: realm.id,
-              name: realm.name,
-            }))}
-            allLabel="All realms"
-          />
-        </div>
         <form
           className="flex items-end gap-2"
           onSubmit={(event) => {
@@ -129,7 +120,7 @@ export const Clients = () => {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => dispatch(fetchClients(params))}
+              onClick={() => dispatch(fetchClients(listParams))}
             >
               Retry
             </Button>
@@ -197,7 +188,8 @@ export const Clients = () => {
       <CreateClientDialog
         open={createOpen}
         onOpenChange={setCreateOpen}
-        onCreated={() => dispatch(fetchClients(params))}
+        realmId={activeRealmId ?? ""}
+        onCreated={() => dispatch(fetchClients(listParams))}
       />
     </div>
   );

@@ -5,9 +5,8 @@ import {
   type UpdateClientInput,
   updateClientThunk,
 } from "@/entities/clients";
-import { selectRealmsItems } from "@/entities/realms";
 import type { Client } from "@/shared/api/contract";
-import { useAppDispatch, useAppSelector } from "@/shared/lib";
+import { useAppDispatch } from "@/shared/lib";
 import { Button } from "@/shared/ui/button";
 import {
   Dialog,
@@ -78,10 +77,8 @@ export const ClientForm = ({
   onCancel,
   onSubmit,
 }: ClientFormProps) => {
-  const realms = useAppSelector(selectRealmsItems);
   const [name, setName] = useState(initial.name);
   const [uri, setUri] = useState(initial.uri);
-  const [realmId, setRealmId] = useState(initial.realm_id);
   const [requireAuth, setRequireAuth] = useState(initial.require_auth);
   const [secret, setSecret] = useState("");
   const [scope, setScope] = useState(initial.scope);
@@ -96,9 +93,6 @@ export const ClientForm = ({
     if (!uri.trim()) {
       nextErrors.uri = "A redirect URI pattern is required.";
     }
-    if (!realmId) {
-      nextErrors.realm_id = "A realm is required.";
-    }
     if (mode === "create" && requireAuth && !secret) {
       nextErrors.client_secret = "A confidential client needs a secret.";
     }
@@ -109,7 +103,7 @@ export const ClientForm = ({
     onSubmit({
       name: name.trim(),
       uri: uri.trim(),
-      realm_id: realmId,
+      realm_id: initial.realm_id,
       require_auth: requireAuth,
       client_secret: secret,
       scope: scope.trim(),
@@ -145,17 +139,6 @@ export const ClientForm = ({
         />
         <FieldNote error={errors.uri} />
       </div>
-      <EntitySelect
-        label="Realm"
-        value={realmId}
-        onChange={setRealmId}
-        options={realms.map((realm) => ({ id: realm.id, name: realm.name }))}
-        placeholder="Select a realm…"
-        disabled={mode === "edit"}
-      />
-      {errors.realm_id ? (
-        <p className="text-xs text-destructive">{errors.realm_id}</p>
-      ) : null}
       <div className="flex items-center justify-between gap-4 rounded-lg border p-3">
         <div>
           <Label htmlFor="client-confidential">Confidential client</Label>
@@ -249,8 +232,8 @@ export const CreateClientDialog = ({
   open,
   onOpenChange,
   onCreated,
-  initialRealmId,
-}: DialogProps & { onCreated: () => void; initialRealmId?: string }) => {
+  realmId,
+}: DialogProps & { onCreated: () => void; realmId: string }) => {
   const dispatch = useAppDispatch();
   const [saving, setSaving] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
@@ -268,7 +251,7 @@ export const CreateClientDialog = ({
         </DialogHeader>
         <ClientForm
           key="new-client"
-          initial={newClientFormValues(initialRealmId)}
+          initial={newClientFormValues(realmId)}
           mode="create"
           hasSecret={false}
           submitLabel="Create client"

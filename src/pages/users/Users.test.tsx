@@ -9,6 +9,7 @@ import {
   it,
   vi,
 } from "vitest";
+import { getMockDb } from "@/mocks/db";
 import { mockServer, resetMockDb } from "@/mocks/server";
 import { renderRoute } from "@/test/render-route";
 
@@ -48,9 +49,11 @@ describe("users flow", () => {
       screen.getByRole("link", { name: "carol@example.com" }),
     ).toBeInTheDocument();
     expect(screen.getByText("deactivated")).toBeInTheDocument();
+    // Realm-scoped: the `admin` realm's user stays hidden.
+    expect(screen.queryByRole("link", { name: "dan@example.com" })).toBeNull();
   });
 
-  it("creates a user", async () => {
+  it("creates a user in the active realm", async () => {
     const user = userEvent.setup();
     renderRoute(`/${TEST_REALM}/users`);
 
@@ -58,9 +61,6 @@ describe("users flow", () => {
       await screen.findByRole("button", { name: "Create user" }),
     );
     const dialog = await screen.findByRole("dialog");
-    await user.selectOptions(within(dialog).getByLabelText("Realm"), [
-      TEST_REALM,
-    ]);
     await user.type(within(dialog).getByLabelText("Email"), "erin@example.com");
     await user.type(within(dialog).getByLabelText("Password"), "ChangeMe123");
     await user.click(
@@ -70,6 +70,10 @@ describe("users flow", () => {
     expect(
       await screen.findByRole("link", { name: "erin@example.com" }),
     ).toBeInTheDocument();
+    expect(
+      getMockDb().users.find((user) => user.email === "erin@example.com")
+        ?.realm_id,
+    ).toBe(TEST_REALM);
   });
 
   it("shows the delete guard message", async () => {

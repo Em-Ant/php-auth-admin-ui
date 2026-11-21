@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { useSearchParams } from "react-router";
+import { useOutletContext, useSearchParams } from "react-router";
+import type { ShellOutletContext } from "@/app/layout";
 import { selectClientsItems } from "@/entities/clients";
 import {
   deleteLoginThunk,
@@ -9,8 +10,7 @@ import {
   selectLoginsListStatus,
   selectLoginsPage,
 } from "@/entities/logins";
-import { selectRealmsItems } from "@/entities/realms";
-import { useAppDispatch, useAppSelector } from "@/shared/lib";
+import { realmScope, useAppDispatch, useAppSelector } from "@/shared/lib";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent } from "@/shared/ui/card";
@@ -30,13 +30,14 @@ import { readLoginsListParams } from "./params";
 
 export const Logins = () => {
   const dispatch = useAppDispatch();
+  const { activeRealmId } = useOutletContext<ShellOutletContext>();
   const [searchParams, setSearchParams] = useSearchParams();
   const params = readLoginsListParams(searchParams);
+  const listParams = { ...params, ...realmScope(activeRealmId) };
   const items = useAppSelector(selectLoginsItems);
   const page = useAppSelector(selectLoginsPage);
   const status = useAppSelector(selectLoginsListStatus);
   const error = useAppSelector(selectLoginsListError);
-  const realms = useAppSelector(selectRealmsItems);
   const clients = useAppSelector(selectClientsItems);
   const [deleting, setDeleting] = useState<string | null>(null);
 
@@ -60,8 +61,8 @@ export const Logins = () => {
     void setSearchParams(next);
   };
 
-  const selectRealm = (value: string) => {
-    updateParams({ realm_id: value || undefined, client_id: undefined });
+  const selectClient = (value: string) => {
+    updateParams({ client_id: value || undefined });
   };
 
   const clientNameOf = (clientId: string) =>
@@ -79,23 +80,9 @@ export const Logins = () => {
       <div className="flex flex-wrap items-end gap-3">
         <div className="w-64">
           <EntitySelect
-            label="Realm"
-            value={params.realm_id ?? ""}
-            onChange={selectRealm}
-            options={realms.map((realm) => ({
-              id: realm.id,
-              name: realm.name,
-            }))}
-            allLabel="All realms"
-          />
-        </div>
-        <div className="w-64">
-          <EntitySelect
             label="Client"
             value={params.client_id ?? ""}
-            onChange={(value) =>
-              updateParams({ client_id: value || undefined })
-            }
+            onChange={selectClient}
             options={clients.map((client) => ({
               id: client.id,
               name: client.name,
@@ -119,7 +106,7 @@ export const Logins = () => {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => dispatch(fetchLogins(params))}
+              onClick={() => dispatch(fetchLogins(listParams))}
             >
               Retry
             </Button>

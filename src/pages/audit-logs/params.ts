@@ -4,7 +4,6 @@ export interface AuditLogsListPageParams {
   action?: string;
   actor_type?: string;
   target_type?: string;
-  realm_id?: string;
   from?: string;
   to?: string;
   limit: number;
@@ -32,12 +31,11 @@ const FILTER_KEYS = [
   "action",
   "actor_type",
   "target_type",
-  "realm_id",
   "from",
   "to",
 ] as const;
 
-/** Filter intent lives in the URL (ADR-0002). */
+/** Filter intent lives in the URL (ADR-0002); the realm comes from the path. */
 export const readAuditLogsListParams = (
   searchParams: URLSearchParams,
 ): AuditLogsListPageParams => {

@@ -2,7 +2,6 @@ import { Plus } from "lucide-react";
 import { useState } from "react";
 import { Link, useOutletContext, useSearchParams } from "react-router";
 import type { ShellOutletContext } from "@/app/layout";
-import { selectRealmsItems } from "@/entities/realms";
 import {
   fetchUsers,
   selectUsersItems,
@@ -10,7 +9,12 @@ import {
   selectUsersListStatus,
   selectUsersPage,
 } from "@/entities/users";
-import { realmPath, useAppDispatch, useAppSelector } from "@/shared/lib";
+import {
+  realmPath,
+  realmScope,
+  useAppDispatch,
+  useAppSelector,
+} from "@/shared/lib";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent } from "@/shared/ui/card";
@@ -25,7 +29,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/shared/ui/table";
-import { EntitySelect } from "@/widgets/entity-select";
 import { readUsersListParams } from "./params";
 import { CreateUserDialog } from "./UserDialogs";
 
@@ -34,11 +37,11 @@ export const Users = () => {
   const { activeRealmId } = useOutletContext<ShellOutletContext>();
   const [searchParams, setSearchParams] = useSearchParams();
   const params = readUsersListParams(searchParams);
+  const listParams = { ...params, ...realmScope(activeRealmId) };
   const items = useAppSelector(selectUsersItems);
   const page = useAppSelector(selectUsersPage);
   const status = useAppSelector(selectUsersListStatus);
   const error = useAppSelector(selectUsersListError);
-  const realms = useAppSelector(selectRealmsItems);
   const [createOpen, setCreateOpen] = useState(false);
   const [query, setQuery] = useState(params.q ?? "");
 
@@ -77,18 +80,6 @@ export const Users = () => {
         </Button>
       </div>
       <div className="flex flex-wrap items-end gap-3">
-        <div className="w-64">
-          <EntitySelect
-            label="Realm"
-            value={params.realm_id ?? ""}
-            onChange={(value) => updateParams({ realm_id: value || undefined })}
-            options={realms.map((realm) => ({
-              id: realm.id,
-              name: realm.name,
-            }))}
-            allLabel="All realms"
-          />
-        </div>
         <form
           className="flex items-end gap-2"
           onSubmit={(event) => {
@@ -128,7 +119,7 @@ export const Users = () => {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => dispatch(fetchUsers(params))}
+              onClick={() => dispatch(fetchUsers(listParams))}
             >
               Retry
             </Button>
@@ -192,7 +183,8 @@ export const Users = () => {
       <CreateUserDialog
         open={createOpen}
         onOpenChange={setCreateOpen}
-        onCreated={() => dispatch(fetchUsers(params))}
+        realmId={activeRealmId ?? ""}
+        onCreated={() => dispatch(fetchUsers(listParams))}
       />
     </div>
   );

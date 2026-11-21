@@ -49,7 +49,8 @@ for the rest of the session.**
 - **The realm comes from context, not from a field.** The Realm filter is
   removed from every list toolbar and the Realm field is removed from the
   create/edit dialogs (`ClientDialogs`, `UserDialogs`, `RoleDialogs`); the slice
-  supplies `realm_id`.
+  supplies `realm_id`. The audit purge dialog is scoped to the active realm too,
+  so no screen but `/realms` reads the realm catalog.
 - **Realm CRUD stays global** under `/realms`. Creating a realm does not switch
   to it; deleting the active realm clears the context and re-resolves the
   default.

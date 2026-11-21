@@ -72,9 +72,7 @@ describe("sessions flow", () => {
     const user = userEvent.setup();
     renderRoute(`/${TEST_REALM}/sessions`);
 
-    await user.selectOptions(await screen.findByLabelText("Realm"), [
-      TEST_REALM,
-    ]);
+    await screen.findByRole("table");
     await user.click(screen.getByRole("button", { name: "Invalidate…" }));
     const dialog = await screen.findByRole("dialog");
     await user.selectOptions(within(dialog).getByLabelText("User"), [ADA_USER]);

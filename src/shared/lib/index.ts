@@ -1,3 +1,4 @@
+export { realmScope } from "./params";
 export { isAbsolute, join, realmPath } from "./path";
 export {
   addAppListener,

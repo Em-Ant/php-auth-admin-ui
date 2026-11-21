@@ -2,7 +2,6 @@ import { ArrowLeft, Pencil, Plus, Trash2 } from "lucide-react";
 import { type ReactNode, useState } from "react";
 import { Link, useNavigate, useOutletContext, useParams } from "react-router";
 import type { ShellOutletContext } from "@/app/layout";
-import { selectRealmsItems } from "@/entities/realms";
 import { selectRolesItems } from "@/entities/roles";
 import {
   deleteUserThunk,
@@ -53,12 +52,12 @@ export const UserDetail = () => {
   const { id = "" } = useParams();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const { activeRealmId } = useOutletContext<ShellOutletContext>();
+  const { activeRealmId, activeRealmName } =
+    useOutletContext<ShellOutletContext>();
   const detail = useAppSelector(selectUserDetail);
   const status = useAppSelector(selectUserDetailStatus);
   const error = useAppSelector(selectUserDetailError);
   const userRoles = useAppSelector(selectUserRoles);
-  const realms = useAppSelector(selectRealmsItems);
   const roles = useAppSelector(selectRolesItems);
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -119,9 +118,7 @@ export const UserDetail = () => {
     );
   }
 
-  const realmName =
-    realms.find((realm) => realm.id === detail.realm_id)?.name ??
-    detail.realm_id;
+  const realmName = activeRealmName ?? detail.realm_id;
   const assignedIds = new Set(userRoles.map((role) => role.id));
   const roleOptions = roles
     .filter(

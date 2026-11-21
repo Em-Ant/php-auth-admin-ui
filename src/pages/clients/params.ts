@@ -1,7 +1,6 @@
 import { DEFAULT_PAGE_SIZE } from "@/entities/realms";
 
 export interface ClientsListPageParams {
-  realm_id?: string;
   q?: string;
   limit: number;
   offset: number;
@@ -24,14 +23,12 @@ const readBoundedInt = (
   return parsed;
 };
 
-/** Filter intent lives in the URL (ADR-0002). */
+/** Filter intent lives in the URL (ADR-0002); the realm comes from the path. */
 export const readClientsListParams = (
   searchParams: URLSearchParams,
 ): ClientsListPageParams => {
-  const realm_id = searchParams.get("realm_id") ?? undefined;
   const q = searchParams.get("q") ?? undefined;
   return {
-    ...(realm_id ? { realm_id } : {}),
     ...(q ? { q } : {}),
     limit: readBoundedInt(searchParams.get("limit"), DEFAULT_PAGE_SIZE, 1, 200),
     offset: readBoundedInt(searchParams.get("offset"), 0, 0),

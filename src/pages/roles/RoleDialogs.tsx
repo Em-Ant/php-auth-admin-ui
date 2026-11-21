@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { fetchClients, selectClientsItems } from "@/entities/clients";
-import { selectRealmsItems } from "@/entities/realms";
+import { selectClientsItems } from "@/entities/clients";
 import {
   type CreateRoleInput,
   createRoleThunk,
@@ -67,31 +66,15 @@ export const RoleForm = ({
   onCancel,
   onSubmit,
 }: RoleFormProps) => {
-  const dispatch = useAppDispatch();
-  const realms = useAppSelector(selectRealmsItems);
   const clients = useAppSelector(selectClientsItems);
-  const [realmId, setRealmId] = useState(initial.realm_id);
   const [name, setName] = useState(initial.name);
   const [clientId, setClientId] = useState(initial.client_id);
   const [description, setDescription] = useState(initial.description);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const selectRealm = (value: string) => {
-    setRealmId(value);
-    setClientId("");
-    // The client dropdown depends on the form's realm choice, which the
-    // list loader cannot know in advance.
-    if (value) {
-      dispatch(fetchClients({ realm_id: value, limit: 200, offset: 0 }));
-    }
-  };
-
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
     const nextErrors: Record<string, string> = {};
-    if (!realmId) {
-      nextErrors.realm_id = "A realm is required.";
-    }
     if (!name.trim()) {
       nextErrors.name = "Name is required.";
     }
@@ -100,7 +83,7 @@ export const RoleForm = ({
       return;
     }
     onSubmit({
-      realm_id: realmId,
+      realm_id: initial.realm_id,
       name: name.trim(),
       client_id: clientId,
       description: description.trim(),
@@ -114,15 +97,6 @@ export const RoleForm = ({
           {serverError}
         </p>
       ) : null}
-      <EntitySelect
-        label="Realm"
-        value={realmId}
-        onChange={selectRealm}
-        options={realms.map((realm) => ({ id: realm.id, name: realm.name }))}
-        placeholder="Select a realm…"
-        disabled={mode === "edit"}
-      />
-      <FieldNote error={errors.realm_id} />
       <div className="grid gap-1.5">
         <Label htmlFor="role-name">Name</Label>
         <Input
@@ -138,10 +112,10 @@ export const RoleForm = ({
         value={clientId}
         onChange={setClientId}
         options={clients
-          .filter((client) => client.realm_id === realmId)
+          .filter((client) => client.realm_id === initial.realm_id)
           .map((client) => ({ id: client.id, name: client.name }))}
         allLabel="Realm role"
-        disabled={mode === "edit" || !realmId}
+        disabled={mode === "edit"}
       />
       <div className="grid gap-1.5">
         <Label htmlFor="role-description">Description</Label>
@@ -189,7 +163,8 @@ export const CreateRoleDialog = ({
   open,
   onOpenChange,
   onCreated,
-}: DialogProps & { onCreated: () => void }) => {
+  realmId,
+}: DialogProps & { onCreated: () => void; realmId: string }) => {
   const dispatch = useAppDispatch();
   const [saving, setSaving] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
@@ -207,7 +182,7 @@ export const CreateRoleDialog = ({
         </DialogHeader>
         <RoleForm
           key="new-role"
-          initial={newRoleFormValues()}
+          initial={newRoleFormValues(realmId)}
           mode="create"
           submitLabel="Create role"
           saving={saving}

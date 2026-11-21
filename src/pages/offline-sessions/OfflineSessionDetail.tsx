@@ -10,7 +10,6 @@ import {
   selectOfflineSessionDetailError,
   selectOfflineSessionDetailStatus,
 } from "@/entities/offline-sessions";
-import { selectRealmsItems } from "@/entities/realms";
 import { selectUsersItems } from "@/entities/users";
 import { realmPath, useAppDispatch, useAppSelector } from "@/shared/lib";
 import { Badge } from "@/shared/ui/badge";
@@ -41,11 +40,11 @@ const DetailRow = ({
 export const OfflineSessionDetail = () => {
   const { id = "" } = useParams();
   const dispatch = useAppDispatch();
-  const { activeRealmId } = useOutletContext<ShellOutletContext>();
+  const { activeRealmId, activeRealmName } =
+    useOutletContext<ShellOutletContext>();
   const detail = useAppSelector(selectOfflineSessionDetail);
   const status = useAppSelector(selectOfflineSessionDetailStatus);
   const error = useAppSelector(selectOfflineSessionDetailError);
-  const realms = useAppSelector(selectRealmsItems);
   const users = useAppSelector(selectUsersItems);
   const clients = useAppSelector(selectClientsItems);
   const [revokeOpen, setRevokeOpen] = useState(false);
@@ -101,9 +100,7 @@ export const OfflineSessionDetail = () => {
     );
   }
 
-  const realmName =
-    realms.find((realm) => realm.id === detail.realm_id)?.name ??
-    detail.realm_id;
+  const realmName = activeRealmName ?? detail.realm_id;
   const userName =
     users.find((user) => user.id === detail.user_id)?.email ?? detail.user_id;
   const clientName =

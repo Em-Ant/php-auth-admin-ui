@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { selectRealmsItems } from "@/entities/realms";
 import {
   assignUserRoleThunk,
   type CreateUserInput,
@@ -8,7 +7,7 @@ import {
   updateUserThunk,
 } from "@/entities/users";
 import type { User } from "@/shared/api/contract";
-import { useAppDispatch, useAppSelector } from "@/shared/lib";
+import { useAppDispatch } from "@/shared/lib";
 import { Button } from "@/shared/ui/button";
 import {
   Dialog,
@@ -77,8 +76,6 @@ export const UserForm = ({
   onCancel,
   onSubmit,
 }: UserFormProps) => {
-  const realms = useAppSelector(selectRealmsItems);
-  const [realmId, setRealmId] = useState(initial.realm_id);
   const [email, setEmail] = useState(initial.email);
   const [name, setName] = useState(initial.name);
   const [password, setPassword] = useState("");
@@ -89,9 +86,6 @@ export const UserForm = ({
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
     const nextErrors: Record<string, string> = {};
-    if (!realmId) {
-      nextErrors.realm_id = "A realm is required.";
-    }
     if (!email.trim()) {
       nextErrors.email = "Email is required.";
     }
@@ -103,7 +97,7 @@ export const UserForm = ({
       return;
     }
     onSubmit({
-      realm_id: realmId,
+      realm_id: initial.realm_id,
       email: email.trim(),
       name: name.trim(),
       password,
@@ -118,17 +112,6 @@ export const UserForm = ({
         <p role="alert" className="text-sm text-destructive">
           {serverError}
         </p>
-      ) : null}
-      <EntitySelect
-        label="Realm"
-        value={realmId}
-        onChange={setRealmId}
-        options={realms.map((realm) => ({ id: realm.id, name: realm.name }))}
-        placeholder="Select a realm…"
-        disabled={mode === "edit"}
-      />
-      {errors.realm_id ? (
-        <p className="text-xs text-destructive">{errors.realm_id}</p>
       ) : null}
       <div className="grid gap-1.5">
         <Label htmlFor="user-email">Email</Label>
@@ -228,7 +211,8 @@ export const CreateUserDialog = ({
   open,
   onOpenChange,
   onCreated,
-}: DialogProps & { onCreated: () => void }) => {
+  realmId,
+}: DialogProps & { onCreated: () => void; realmId: string }) => {
   const dispatch = useAppDispatch();
   const [saving, setSaving] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
@@ -246,7 +230,7 @@ export const CreateUserDialog = ({
         </DialogHeader>
         <UserForm
           key="new-user"
-          initial={newUserFormValues()}
+          initial={newUserFormValues(realmId)}
           mode="create"
           submitLabel="Create user"
           saving={saving}

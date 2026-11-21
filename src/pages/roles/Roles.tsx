@@ -3,7 +3,6 @@ import { useState } from "react";
 import { Link, useOutletContext, useSearchParams } from "react-router";
 import type { ShellOutletContext } from "@/app/layout";
 import { selectClientsItems } from "@/entities/clients";
-import { selectRealmsItems } from "@/entities/realms";
 import {
   fetchRoles,
   selectRolesItems,
@@ -11,7 +10,12 @@ import {
   selectRolesListStatus,
   selectRolesPage,
 } from "@/entities/roles";
-import { realmPath, useAppDispatch, useAppSelector } from "@/shared/lib";
+import {
+  realmPath,
+  realmScope,
+  useAppDispatch,
+  useAppSelector,
+} from "@/shared/lib";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent } from "@/shared/ui/card";
@@ -34,11 +38,11 @@ export const Roles = () => {
   const { activeRealmId } = useOutletContext<ShellOutletContext>();
   const [searchParams, setSearchParams] = useSearchParams();
   const params = readRolesListParams(searchParams);
+  const listParams = { ...params, ...realmScope(activeRealmId) };
   const items = useAppSelector(selectRolesItems);
   const page = useAppSelector(selectRolesPage);
   const status = useAppSelector(selectRolesListStatus);
   const error = useAppSelector(selectRolesListError);
-  const realms = useAppSelector(selectRealmsItems);
   const clients = useAppSelector(selectClientsItems);
   const [createOpen, setCreateOpen] = useState(false);
 
@@ -62,10 +66,6 @@ export const Roles = () => {
     void setSearchParams(next);
   };
 
-  const selectRealm = (value: string) => {
-    updateParams({ realm_id: value || undefined, client_id: undefined });
-  };
-
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-start justify-between gap-4">
@@ -82,18 +82,6 @@ export const Roles = () => {
         </Button>
       </div>
       <div className="flex flex-wrap items-end gap-3">
-        <div className="w-64">
-          <EntitySelect
-            label="Realm"
-            value={params.realm_id ?? ""}
-            onChange={selectRealm}
-            options={realms.map((realm) => ({
-              id: realm.id,
-              name: realm.name,
-            }))}
-            allLabel="All realms"
-          />
-        </div>
         <div className="w-64">
           <EntitySelect
             label="Client"
@@ -124,7 +112,7 @@ export const Roles = () => {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => dispatch(fetchRoles(params))}
+              onClick={() => dispatch(fetchRoles(listParams))}
             >
               Retry
             </Button>
@@ -184,7 +172,8 @@ export const Roles = () => {
       <CreateRoleDialog
         open={createOpen}
         onOpenChange={setCreateOpen}
-        onCreated={() => dispatch(fetchRoles(params))}
+        realmId={activeRealmId ?? ""}
+        onCreated={() => dispatch(fetchRoles(listParams))}
       />
     </div>
   );

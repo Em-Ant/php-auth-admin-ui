@@ -1,4 +1,4 @@
-import { fireEvent, screen, within } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import {
   afterAll,
@@ -58,7 +58,7 @@ describe("audit logs flow", () => {
     expect(screen.getByText(/ada@example.com/)).toBeInTheDocument();
   });
 
-  it("refuses an unbounded purge and purges with a cutoff", async () => {
+  it("purges only the active realm's audit entries", async () => {
     const user = userEvent.setup();
     renderRoute(`/${TEST_REALM}/audit-logs`);
 
@@ -68,18 +68,8 @@ describe("audit logs flow", () => {
       within(dialog).getByRole("button", { name: "Purge entries" }),
     );
 
-    expect(
-      await within(dialog).findByText(/never be unbounded/),
-    ).toBeInTheDocument();
-
-    fireEvent.change(within(dialog).getByLabelText("Older than"), {
-      target: { value: "2027-01-01" },
-    });
-    await user.click(
-      within(dialog).getByRole("button", { name: "Purge entries" }),
-    );
-
-    expect(await screen.findByText("Purged 3 entries.")).toBeInTheDocument();
+    // The realm owns two entries; the NULL-realm row is out of scope.
+    expect(await screen.findByText("Purged 2 entries.")).toBeInTheDocument();
     expect(
       await screen.findByText("No entries match these filters."),
     ).toBeInTheDocument();

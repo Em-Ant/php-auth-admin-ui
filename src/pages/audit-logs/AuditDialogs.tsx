@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { purgeAuditLogsThunk } from "@/entities/audit-logs";
-import { selectRealmsItems } from "@/entities/realms";
-import { useAppDispatch, useAppSelector } from "@/shared/lib";
+import { useAppDispatch } from "@/shared/lib";
 import { Button } from "@/shared/ui/button";
 import {
   Dialog,
@@ -12,46 +11,40 @@ import {
 } from "@/shared/ui/dialog";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
-import { EntitySelect } from "@/widgets/entity-select";
 
 interface PurgeDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  realmId: string;
   onPurged: (count: number) => void;
 }
 
 export const PurgeDialog = ({
   open,
   onOpenChange,
+  realmId,
   onPurged,
 }: PurgeDialogProps) => {
   const dispatch = useAppDispatch();
-  const realms = useAppSelector(selectRealmsItems);
-  const [realmId, setRealmId] = useState("");
   const [olderThan, setOlderThan] = useState("");
   const [saving, setSaving] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
 
   const close = () => {
     setServerError(null);
-    setRealmId("");
     setOlderThan("");
     onOpenChange(false);
   };
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
-    if (!realmId && !olderThan) {
-      setServerError(
-        "Set a realm, a cutoff date, or both — a purge can never be unbounded.",
-      );
-      return;
-    }
     setSaving(true);
     setServerError(null);
+    // The realm comes from the route, so a purge is always scoped and never
+    // unbounded; the cutoff narrows it further.
     dispatch(
       purgeAuditLogsThunk({
-        ...(realmId ? { realm_id: realmId } : {}),
+        realm_id: realmId,
         ...(olderThan ? { older_than: olderThan } : {}),
       }),
     )
@@ -74,8 +67,8 @@ export const PurgeDialog = ({
         <DialogHeader>
           <DialogTitle>Purge audit log</DialogTitle>
           <DialogDescription>
-            Deleted entries are gone for good. The purge refuses to run without
-            at least one guard below.
+            Deleted entries are gone for good. Only this realm's entries are
+            purged.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="grid gap-4">
@@ -84,16 +77,6 @@ export const PurgeDialog = ({
               {serverError}
             </p>
           ) : null}
-          <EntitySelect
-            label="Realm"
-            value={realmId}
-            onChange={setRealmId}
-            options={realms.map((realm) => ({
-              id: realm.id,
-              name: realm.name,
-            }))}
-            allLabel="Any realm"
-          />
           <div className="grid gap-1.5">
             <Label htmlFor="purge-older-than">Older than</Label>
             <Input
@@ -113,7 +96,7 @@ export const PurgeDialog = ({
               Cancel
             </Button>
             <Button type="submit" variant="destructive" disabled={saving}>
-              {saving ? "Purging…" : "Purge entries"}
+              {saving ? "Purging..." : "Purge entries"}
             </Button>
           </div>
         </form>

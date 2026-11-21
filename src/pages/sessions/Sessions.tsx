@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { useSearchParams } from "react-router";
+import { useOutletContext, useSearchParams } from "react-router";
 
-import { selectRealmsItems } from "@/entities/realms";
+import type { ShellOutletContext } from "@/app/layout";
 import {
   fetchSessions,
   revokeSessionThunk,
@@ -11,7 +11,7 @@ import {
   selectSessionsPage,
 } from "@/entities/sessions";
 import { selectUsersItems } from "@/entities/users";
-import { useAppDispatch, useAppSelector } from "@/shared/lib";
+import { realmScope, useAppDispatch, useAppSelector } from "@/shared/lib";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent } from "@/shared/ui/card";
@@ -32,13 +32,14 @@ import { InvalidateDialog } from "./SessionsDialogs";
 
 export const Sessions = () => {
   const dispatch = useAppDispatch();
+  const { activeRealmId } = useOutletContext<ShellOutletContext>();
   const [searchParams, setSearchParams] = useSearchParams();
   const params = readSessionsListParams(searchParams);
+  const listParams = { ...params, ...realmScope(activeRealmId) };
   const items = useAppSelector(selectSessionsItems);
   const page = useAppSelector(selectSessionsPage);
   const status = useAppSelector(selectSessionsListStatus);
   const error = useAppSelector(selectSessionsListError);
-  const realms = useAppSelector(selectRealmsItems);
   const users = useAppSelector(selectUsersItems);
   const [invalidateOpen, setInvalidateOpen] = useState(false);
   const [revoking, setRevoking] = useState<string | null>(null);
@@ -64,8 +65,8 @@ export const Sessions = () => {
     void setSearchParams(next);
   };
 
-  const selectRealm = (value: string) => {
-    updateParams({ realm_id: value || undefined, user_id: undefined });
+  const selectUser = (value: string) => {
+    updateParams({ user_id: value || undefined });
   };
 
   const emailOf = (userId: string) =>
@@ -92,21 +93,9 @@ export const Sessions = () => {
       <div className="flex flex-wrap items-end gap-3">
         <div className="w-64">
           <EntitySelect
-            label="Realm"
-            value={params.realm_id ?? ""}
-            onChange={selectRealm}
-            options={realms.map((realm) => ({
-              id: realm.id,
-              name: realm.name,
-            }))}
-            allLabel="All realms"
-          />
-        </div>
-        <div className="w-64">
-          <EntitySelect
             label="User"
             value={params.user_id ?? ""}
-            onChange={(value) => updateParams({ user_id: value || undefined })}
+            onChange={selectUser}
             options={users.map((user) => ({ id: user.id, name: user.email }))}
             allLabel="All users"
           />
@@ -127,7 +116,7 @@ export const Sessions = () => {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => dispatch(fetchSessions(params))}
+              onClick={() => dispatch(fetchSessions(listParams))}
             >
               Retry
             </Button>
@@ -203,7 +192,7 @@ export const Sessions = () => {
         onOpenChange={setInvalidateOpen}
         onInvalidated={(count) => {
           setNotice(`Invalidated ${count} session${count === 1 ? "" : "s"}.`);
-          dispatch(fetchSessions(params));
+          dispatch(fetchSessions(listParams));
         }}
       />
       <ConfirmDialog

@@ -9,6 +9,7 @@ import {
   it,
   vi,
 } from "vitest";
+import { getMockDb } from "@/mocks/db";
 import { mockServer, resetMockDb } from "@/mocks/server";
 import { renderRoute } from "@/test/render-route";
 
@@ -46,9 +47,11 @@ describe("clients flow", () => {
     ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "spa" })).toBeInTheDocument();
     expect(screen.getAllByText("public")).toHaveLength(2);
+    // Realm-scoped: the `admin` realm's confidential client stays hidden.
+    expect(screen.queryByRole("link", { name: "api-service" })).toBeNull();
   });
 
-  it("creates and deletes a client", async () => {
+  it("creates a client in the active realm and deletes it", async () => {
     const user = userEvent.setup();
     renderRoute(`/${TEST_REALM}/clients`);
 
@@ -61,9 +64,6 @@ describe("clients flow", () => {
       within(dialog).getByLabelText("Redirect URI pattern"),
       "https://acme.example/*",
     );
-    await user.selectOptions(within(dialog).getByLabelText("Realm"), [
-      TEST_REALM,
-    ]);
     await user.click(
       within(dialog).getByRole("button", { name: "Create client" }),
     );
@@ -73,6 +73,10 @@ describe("clients flow", () => {
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
     );
     const created = await screen.findByRole("link", { name: "acme-app" });
+    expect(
+      getMockDb().clients.find((client) => client.name === "acme-app")
+        ?.realm_id,
+    ).toBe(TEST_REALM);
     await user.click(created);
 
     // Gate on the detail heading: the URI text also exists on the list row.

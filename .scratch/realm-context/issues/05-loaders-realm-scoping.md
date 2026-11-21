@@ -1,6 +1,6 @@
 # 05 — Loaders pass realm_id; drop realm selectors
 
-- **Status:** Todo
+- **Status:** Done
 - **Depends on:** 04
 - **Blocks:** —
 
@@ -47,3 +47,26 @@ scoped fetch, and the per-screen Realm UI should disappear.
 ## Out of scope
 
 Server-side authorization (issue 07).
+
+## Notes
+
+- **Page params stay realm-free.** `readXListParams` reads only URL search
+  params; the route realm is merged in when a fetch is built, through the shared
+  `realmScope(realmId)` helper (`src/shared/lib/params.ts`). Loaders pass
+  `params.realmId`; pages read `activeRealmId` from the shell outlet context.
+- **Create dialogs take a required `realmId`.** `CreateClientDialog`,
+  `CreateUserDialog` and `CreateRoleDialog` receive the active realm from the
+  page and build their form values from it; the Realm field, its state and its
+  validation are gone. `RoleDialogs` keeps its realm-scoped Client selector,
+  whose options now come from the roles loader instead of a per-form fetch.
+- **Detail pages read the realm from context.** `UserDetail`, `RoleDetail`,
+  `OfflineSessionDetail` and `AuditLogDetail` render `activeRealmName`;
+  `ClientDetail` reads `selectRealmDetail` because it also needs the realm's
+  `scope` to resolve the client's inherited scopes.
+- **Audit purge is realm-scoped.** `PurgeDialog` no longer loads the realm
+  catalog (ADR-0005: the switcher is the only screen that needs the full realm
+  list); it purges the active realm, optionally narrowed by a cutoff. The
+  realm-scoped list already hides `realm_id = NULL` rows, so no separate
+  "Global" view is needed.
+- **Removing a loader's `fetchRealms` means `selectRealmsItems` is only
+  populated on `/realms`** — no scoped screen may read it.

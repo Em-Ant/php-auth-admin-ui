@@ -7,7 +7,6 @@ import {
   selectAuditLogDetailError,
   selectAuditLogDetailStatus,
 } from "@/entities/audit-logs";
-import { selectRealmsItems } from "@/entities/realms";
 import { realmPath, useAppSelector } from "@/shared/lib";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
@@ -35,11 +34,11 @@ const DetailRow = ({
 
 export const AuditLogDetail = () => {
   const { id = "" } = useParams();
-  const { activeRealmId } = useOutletContext<ShellOutletContext>();
+  const { activeRealmId, activeRealmName } =
+    useOutletContext<ShellOutletContext>();
   const detail = useAppSelector(selectAuditLogDetail);
   const status = useAppSelector(selectAuditLogDetailStatus);
   const error = useAppSelector(selectAuditLogDetailError);
-  const realms = useAppSelector(selectRealmsItems);
 
   if (status === "loading" && detail?.id !== id) {
     return (
@@ -90,10 +89,8 @@ export const AuditLogDetail = () => {
     );
   }
 
-  const realmName = detail.realm_id
-    ? (realms.find((realm) => realm.id === detail.realm_id)?.name ??
-      detail.realm_id)
-    : "—";
+  const realmName =
+    detail.realm_id === null ? "—" : (activeRealmName ?? detail.realm_id);
 
   return (
     <div className="flex flex-col gap-4">

@@ -3,7 +3,6 @@ import { type ReactNode, useState } from "react";
 import { Link, useNavigate, useOutletContext, useParams } from "react-router";
 import type { ShellOutletContext } from "@/app/layout";
 import { selectClientsItems } from "@/entities/clients";
-import { selectRealmsItems } from "@/entities/realms";
 import {
   deleteRoleThunk,
   fetchRoleById,
@@ -42,11 +41,11 @@ export const RoleDetail = () => {
   const { id = "" } = useParams();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const { activeRealmId } = useOutletContext<ShellOutletContext>();
+  const { activeRealmId, activeRealmName } =
+    useOutletContext<ShellOutletContext>();
   const detail = useAppSelector(selectRoleDetail);
   const status = useAppSelector(selectRoleDetailStatus);
   const error = useAppSelector(selectRoleDetailError);
-  const realms = useAppSelector(selectRealmsItems);
   const clients = useAppSelector(selectClientsItems);
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -100,9 +99,7 @@ export const RoleDetail = () => {
     );
   }
 
-  const realmName =
-    realms.find((realm) => realm.id === detail.realm_id)?.name ??
-    detail.realm_id;
+  const realmName = activeRealmName ?? detail.realm_id;
   const clientName = detail.client_id
     ? (clients.find((client) => client.id === detail.client_id)?.name ??
       detail.client_id)
