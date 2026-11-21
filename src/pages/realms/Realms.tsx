@@ -1,6 +1,7 @@
-import { Plus } from "lucide-react";
+import { Check, Plus } from "lucide-react";
 import { useState } from "react";
-import { Link, useSearchParams } from "react-router";
+import { Link, useOutletContext, useSearchParams } from "react-router";
+import type { ShellOutletContext } from "@/app/layout";
 import {
   fetchRealms,
   selectRealmsItems,
@@ -35,6 +36,8 @@ const RealmsSkeleton = () => (
 
 export const Realms = () => {
   const dispatch = useAppDispatch();
+  const { activeRealmId, activateRealm } =
+    useOutletContext<ShellOutletContext>();
   const [searchParams, setSearchParams] = useSearchParams();
   const params = readRealmsListParams(searchParams);
   const items = useAppSelector(selectRealmsItems);
@@ -103,6 +106,7 @@ export const Realms = () => {
                     <TableHead>Access token</TableHead>
                     <TableHead>Session max</TableHead>
                     <TableHead>Created</TableHead>
+                    <TableHead className="text-right">Active</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -135,6 +139,28 @@ export const Realms = () => {
                         {formatTtl(realm.session_expires_in)}
                       </TableCell>
                       <TableCell>{realm.created_at}</TableCell>
+                      <TableCell className="text-right">
+                        {realm.id === activeRealmId ? (
+                          <Badge variant="secondary">
+                            <Check />
+                            Active
+                          </Badge>
+                        ) : (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            aria-label={`Activate realm ${realm.name}`}
+                            onClick={() =>
+                              activateRealm({
+                                id: realm.id,
+                                name: realm.name,
+                              })
+                            }
+                          >
+                            Activate
+                          </Button>
+                        )}
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

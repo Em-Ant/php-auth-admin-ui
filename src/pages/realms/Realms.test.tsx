@@ -12,6 +12,7 @@ import {
   vi,
 } from "vitest";
 import { createRoutes } from "@/app/routes";
+import { setupAppListeners } from "@/app/store";
 import { createAppStore } from "@/app/store/store";
 import { mockServer, resetMockDb } from "@/mocks/server";
 
@@ -37,7 +38,10 @@ vi.mock("@/shared/config", () => ({
  * Full feature flow (ADR-0004): real route table, real store, real loaders,
  * API boundary mocked by the MSW server. The template later entities copy.
  */
-beforeAll(() => mockServer.listen({ onUnhandledFrame: "error" }));
+beforeAll(() => {
+  setupAppListeners();
+  mockServer.listen({ onUnhandledFrame: "error" });
+});
 beforeEach(() => resetMockDb());
 afterAll(() => mockServer.close());
 
@@ -68,6 +72,30 @@ describe("realms flow", () => {
 
     expect(await screen.findByText("Showing 2–2 of 2")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "test" })).toBeInTheDocument();
+  });
+
+  it("activates a realm and stays on the page", async () => {
+    const user = userEvent.setup();
+    const router = renderAt("/realms");
+
+    // `config.auth.realm` is "test", so "test" is active on load.
+    const adminRow = (
+      await screen.findByRole("link", { name: "admin" })
+    ).closest("tr");
+    const testRow = screen.getByRole("link", { name: "test" }).closest("tr");
+    expect(within(testRow as HTMLElement).getByText("Active")).toBeVisible();
+    expect(within(adminRow as HTMLElement).queryByText("Active")).toBeNull();
+
+    await user.click(
+      screen.getByRole("button", { name: "Activate realm admin" }),
+    );
+
+    expect(within(adminRow as HTMLElement).getByText("Active")).toBeVisible();
+    expect(within(testRow as HTMLElement).queryByText("Active")).toBeNull();
+    expect(
+      screen.queryByRole("button", { name: "Activate realm admin" }),
+    ).toBeNull();
+    expect(router.state.location.pathname).toBe("/realms");
   });
 
   it("creates a realm from the dialog", async () => {

@@ -1,7 +1,7 @@
 import { RefreshCw, Server, UserRound } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useOutletContext } from "react-router";
-import type { OperatorOutletContext } from "@/app/layout";
+import type { ShellOutletContext } from "@/app/layout";
 import { rawApiClient } from "@/shared/api";
 import { getConfig } from "@/shared/config";
 import { join } from "@/shared/lib";
@@ -72,7 +72,7 @@ const StatusBadge = ({ value }: { value?: string }) => {
 };
 
 export const Overview = () => {
-  const { name, roles } = useOutletContext<OperatorOutletContext>();
+  const { name, roles } = useOutletContext<ShellOutletContext>();
   const { state, loading, refresh } = useBackendProbe();
 
   return (

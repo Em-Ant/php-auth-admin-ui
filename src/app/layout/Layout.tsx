@@ -1,11 +1,18 @@
 import { ChevronsUpDown, LogOut, ShieldCheck } from "lucide-react";
 
+import { useCallback } from "react";
 import { Link, Outlet, useLocation } from "react-router";
 import {
   requestLogout,
   selectOperatorName,
   selectOperatorRoles,
 } from "@/app/model/operator";
+import {
+  type ActiveRealm,
+  selectActiveRealmId,
+  selectActiveRealmName,
+  setActiveRealm,
+} from "@/app/model/realm";
 import { useTheme } from "@/app/model/theme";
 import { useAppDispatch, useAppSelector } from "@/shared/lib";
 import { Avatar, AvatarFallback } from "@/shared/ui/avatar";
@@ -38,7 +45,7 @@ import {
 import { Switch } from "@/shared/ui/switch";
 import { TooltipProvider } from "@/shared/ui/tooltip";
 import { NAV_GROUPS, pageTitleFor } from "./navigation";
-import type { OperatorOutletContext } from "./outlet-context";
+import type { ShellOutletContext } from "./outlet-context";
 
 const getInitials = (name: string | null) =>
   name
@@ -52,8 +59,17 @@ export const Layout = () => {
   const dispatch = useAppDispatch();
   const name = useAppSelector(selectOperatorName);
   const roles = useAppSelector(selectOperatorRoles);
+  const activeRealmId = useAppSelector(selectActiveRealmId);
+  const activeRealmName = useAppSelector(selectActiveRealmName);
   const { isDark, toggle } = useTheme();
   const { pathname } = useLocation();
+
+  const activateRealm = useCallback(
+    (realm: ActiveRealm) => {
+      dispatch(setActiveRealm(realm));
+    },
+    [dispatch],
+  );
 
   const isActive = (href: string) =>
     pathname === href || pathname.startsWith(`${href}/`);
@@ -165,7 +181,17 @@ export const Layout = () => {
             />
           </header>
           <div className="flex flex-1 flex-col gap-4 p-4 md:p-6">
-            <Outlet context={{ name, roles } satisfies OperatorOutletContext} />
+            <Outlet
+              context={
+                {
+                  name,
+                  roles,
+                  activeRealmId,
+                  activeRealmName,
+                  activateRealm,
+                } satisfies ShellOutletContext
+              }
+            />
           </div>
         </SidebarInset>
       </SidebarProvider>

@@ -1,6 +1,6 @@
 # 02 — Realms table: activate control and Active pill
 
-- **Status:** Todo
+- **Status:** Done
 - **Depends on:** 01
 - **Blocks:** —
 
@@ -20,8 +20,10 @@ navigate.
   - `aria-label={`Activate realm ${realm.name}`}` so tests and screen readers can
     target one row (the visible "Activate" is contained in the accessible name,
     satisfying label-in-name).
-  - `onClick` dispatches `setActiveRealm({ id: realm.id, name: realm.name })`.
-    No `navigate`.
+  - `onClick` activates the realm. No `navigate`.
+- Pages do not import the app slice (ADR-0003): the shell hands the active realm
+  id and an `activateRealm` callback to pages through the outlet context
+  (`ShellOutletContext`), which dispatches `setActiveRealm` in the Layout.
 
 ## Acceptance criteria
 
