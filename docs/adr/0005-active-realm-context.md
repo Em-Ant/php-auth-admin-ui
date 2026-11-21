@@ -59,10 +59,30 @@ for the rest of the session.**
 
 ### Audit entries without a realm
 
-Some audit entries carry `realm_id = NULL` (for example API-key actions).
-A strictly scoped audit view would hide them. The decision is **open** and
-tracked by the feature; the default if unresolved is a separate "Global"
-audit view rather than mixing them into a realm.
+The `audit_logs.realm_id` column is nullable by design (migration 009 documents it as
+"which realm was affected (NULL for cross-realm ops)"), but the current admin API
+**never writes a NULL**: every audited write is owned by one realm, resolved by the
+controller before the service logs it, and the four delete paths pass
+`$existing?->getRealmId()` only after a controller `404` guard. The nullable column
+that *is* exercised is `actor_id`, which is null for static-API-key writes — not
+`realm_id`. A realm-scoped audit call sends `realm_id=<active>`, and
+`(:realm_id IS NULL OR realm_id = :realm_id)` already excludes any NULL rows.
+
+**Decision:** the audit view stays strictly realm-scoped. There is **no** separate
+"Global" audit view. If a future cross-realm/global writer is added, it ships with
+the read side it needs; a speculative `realm_id IS NULL` mode is not built now.
+
+### Server support
+
+Two additive, authorization-neutral read paths support this decision:
+
+- **`GET /admin/realms`** gains a `q` prefix filter on `name` (mirroring users and
+  clients) for the switcher's search.
+- **`GET /admin/realms/options`** returns every realm as `{ id, name }`, sorted by
+  name, with no pagination — so the switcher, default resolution and the `:realmId`
+  guard never depend on the 200-row `limit` cap.
+
+Neither adds a migration, route prefix, or per-realm authorization.
 
 ### Not in scope
 
@@ -72,9 +92,9 @@ audit view rather than mixing them into a realm.
   API. A per-realm authorization model is a server-side change and a separate
   decision.
 - **The realm switcher never paginates.** Realms are expected to stay few; the
-  switcher relies on `CATALOG_LIMIT`. A `q` search on `/admin/realms` is the
-  fallback if that changes (it currently has no search param, unlike users and
-  clients).
+  switcher uses `GET /admin/realms/options` (all `{ id, name }`) so it is not
+  bounded by the 200-row `limit` cap, with the `q` filter on `/admin/realms` for
+  search. See *Server support*.
 
 ## Consequences
 

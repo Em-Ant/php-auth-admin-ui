@@ -40,6 +40,26 @@ describe("mock admin API", () => {
     expect(body.total).toBe(2);
   });
 
+  it("filters realms by prefix query and ignores mid-string fragments", async () => {
+    const prefix = await get("/admin/realms?q=adm");
+    expect(prefix.body.total).toBe(1);
+    expect(prefix.body.items[0]).toMatchObject({ name: "admin" });
+
+    const substring = await get("/admin/realms?q=dmi");
+    expect(substring.body.total).toBe(0);
+  });
+
+  it("lists realm options as {id,name} sorted by name", async () => {
+    const { status, body } = await get("/admin/realms/options");
+
+    expect(status).toBe(200);
+    expect(body.total).toBe(2);
+    expect(body.items).toEqual([
+      { id: "22222222-2222-2222-2222-222222222222", name: "admin" },
+      { id: "11111111-1111-1111-1111-111111111111", name: "test" },
+    ]);
+  });
+
   it("filters users by prefix query", async () => {
     const { body } = await get("/admin/users?q=ada");
 

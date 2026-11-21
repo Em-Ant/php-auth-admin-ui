@@ -56,6 +56,21 @@ export interface Realm {
   created_at: SqlDateTime;
 }
 
+/** `GET /admin/realms/options` — one realm reduced to its picker fields. */
+export interface RealmOption {
+  id: string;
+  name: string;
+}
+
+/**
+ * `GET /admin/realms/options` response: the full realm catalog, unpaginated.
+ * Deliberately not a {@link ListEnvelope} — there is no limit/offset.
+ */
+export interface RealmOptions {
+  items: RealmOption[];
+  total: number;
+}
+
 export interface Client {
   id: string;
   name: string;

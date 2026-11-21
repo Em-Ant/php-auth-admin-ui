@@ -92,10 +92,19 @@ const authPassthrough = [
 
 const realmHandlers = [
   http.get("*/admin/realms", ({ request }) => {
-    const items = [...getMockDb().realms].sort((a, b) =>
-      a.name.localeCompare(b.name),
-    );
-    return HttpResponse.json(paginate(items, new URL(request.url)));
+    const url = new URL(request.url);
+    const q = url.searchParams.get("q");
+    const items = [...getMockDb().realms]
+      .filter((realm) => q === null || matchesPrefixQuery(q, [realm.name]))
+      .sort((a, b) => a.name.localeCompare(b.name));
+    return HttpResponse.json(paginate(items, url));
+  }),
+
+  http.get("*/admin/realms/options", () => {
+    const items = [...getMockDb().realms]
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .map((realm) => ({ id: realm.id, name: realm.name }));
+    return HttpResponse.json({ items, total: items.length });
   }),
 
   http.post("*/admin/realms", async ({ request }) => {

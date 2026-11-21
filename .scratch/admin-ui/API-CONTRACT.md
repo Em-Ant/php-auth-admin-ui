@@ -199,13 +199,14 @@ Beyond `limit`/`offset`, these query params are supported per endpoint. They com
 | `/admin/audit-logs` | `action`, `actor_type`, `target_type`, `realm_id`, `from`, `to` |
 | `/admin/users/{id}/roles` | pagination only |
 | `/admin/clients/{id}/scope-roles` | pagination only |
-| `/admin/realms` | pagination only |
+| `/admin/realms` | `q` |
 
 > **Search is prefix type-ahead (`?q=`), not substring.** On `/admin/users` it matches the
-> start of `email` or `name`; on `/admin/clients` the start of `name` or `uri`. A mid-string
-> fragment matches nothing. Matching is ASCII case-insensitive (SQLite `LIKE` default); there
-> is no Unicode case folding. `%`, `_` and `\` in the term match literally. Terms over 128
-> chars are truncated. Combines with `realm_id` (AND) and pagination as usual.
+> start of `email` or `name`; on `/admin/clients` the start of `name` or `uri`; on
+> `/admin/realms` the start of `name`. A mid-string fragment matches nothing. Matching is
+> ASCII case-insensitive (SQLite `LIKE` default); there is no Unicode case folding. `%`, `_`
+> and `\` in the term match literally. Terms over 128 chars are truncated. Combines with
+> `realm_id` (AND) and pagination as usual.
 >
 > **Filter values are not validated.** An unrecognised `action`, `actor_type`, `target_type`
 > or date is not rejected — it silently falls back to its default rather than returning a
@@ -248,7 +249,7 @@ delete means "revoke first": `POST /admin/sessions/invalidate` (by `user_id` and
 | Resource | Endpoints |
 |---|---|
 | Keys | `POST /keys` |
-| Realms | `GET /realms`, `POST /realms`, `GET/PUT/DELETE /realms/{id}` |
+| Realms | `GET /realms`, `GET /realms/options`, `POST /realms`, `GET/PUT/DELETE /realms/{id}` |
 | Clients | `GET /clients`, `POST /clients`, `GET/PUT/DELETE /clients/{id}` |
 | Users | `GET /users`, `POST /users`, `GET/PUT/DELETE /users/{id}` |
 | User roles | `GET/POST /users/{id}/roles`, `DELETE /users/{id}/roles/{role_id}` |
@@ -269,7 +270,8 @@ delete means "revoke first": `POST /admin/sessions/invalidate` (by `user_id` and
 
 A realm owns keys, token TTLs, the scope set, and the password policy.
 
-**`GET /admin/realms`** — list envelope (§3), pagination only, no filters.
+**`GET /admin/realms`** — list envelope (§3); the only filter is `q` (prefix search on
+`name`, see §3), plus pagination.
 
 Realm object (also the shape of `GET /realms/{id}` and the create/update response):
 
@@ -299,6 +301,26 @@ It is also the only catalog of available scopes; there is no scopes endpoint.
 `session_expires_in` is the maximum SSO session lifetime and `idle_session_expires_in` the
 inactivity cutoff — a session ends at whichever comes first, so label them that way in the
 realm form rather than showing two unexplained TTLs.
+
+**`GET /admin/realms/options`** → `200`
+
+The full realm catalog for pickers and default-realm resolution, so callers do not depend
+on the 200-row `limit` cap. No query params, no pagination, no filters: every realm, sorted
+by `name`, reduced to `{ id, name }`.
+
+```json
+{
+  "items": [
+    { "id": "uuid", "name": "admin" },
+    { "id": "uuid", "name": "web" }
+  ],
+  "total": 2
+}
+```
+
+`name` is unique (`name_ind`), so the pair is unambiguous. This is deliberately **not** the
+paginated list envelope — there is no `limit`/`offset`. `options` is a static path segment,
+registered before `/realms/{id}`, so it is never read as a realm id.
 
 **`POST /admin/realms`** → `201`
 
