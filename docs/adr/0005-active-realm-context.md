@@ -87,11 +87,11 @@ Neither adds a migration, route prefix, or per-realm authorization.
 
 ### Not in scope
 
-- **Per-realm authorization.** Today `hasRole(ADMIN_ROLE)` grants admin
-  globally; the active realm is a UI context, not a security boundary. Realm
-  scoping here does not stop an admin from acting on another realm through the
-  API. A per-realm authorization model is a server-side change and a separate
-  decision.
+- **Per-realm authorization — decided separately (ADR-0006).** Today
+  `hasRole(ADMIN_ROLE)` grants admin globally; the active realm is a UI context,
+  not a security boundary. Realm scoping here does not stop an admin from acting
+  on another realm through the API. Keeping the global admin role is the chosen
+  option; a per-realm model is a server-side change and a separate feature.
 - **The realm switcher never paginates.** Realms are expected to stay few; the
   switcher uses `GET /admin/realms/options` (all `{ id, name }`) so it is not
   bounded by the 200-row `limit` cap, with the `q` filter on `/admin/realms` for
@@ -117,7 +117,8 @@ Neither adds a migration, route prefix, or per-realm authorization.
   move to realm-prefixed paths, and new tests cover: default-admin resolution,
   activate-stays-put, the shell pill, unknown-realm redirect, and that a scoped
   loader passes `realm_id`.
-- `CONTEXT.md` should gain an **Active realm** entry once this lands.
+- `CONTEXT.md` defines an **Active realm** entry; keep it aligned with ADR-0005
+  and ADR-0006.
 
 ## Revisit when
 

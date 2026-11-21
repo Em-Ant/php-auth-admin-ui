@@ -62,13 +62,16 @@ request.
 - **Audit entries with `realm_id = NULL`.** Resolved (ADR-0005): the column is
   nullable by design but no admin API path writes NULL, so the audit view stays
   strictly realm-scoped and there is **no** separate "Global" view.
-- **Landing route.** Should `/` redirect to `/:defaultRealmId/overview`, or keep
-  `/overview` global and only set the context? Recommend the former once routes
-  are scoped.
+- **Landing route.** Resolved: `/` redirects to the global `/overview` and the
+  active realm is resolved in the shell. The overview is an operator/backend
+  health screen rather than realm data, so it stays outside the `:realmId`
+  prefix; scoped screens are only reached through `/:realmId/...`.
 
 ## Related documents
 
 - ADR-0005 (`docs/adr/0005-active-realm-context.md`) — the decision.
+- ADR-0006 (`docs/adr/0006-per-realm-authorization.md`) — why authorization
+  stays global.
 - ADR-0001 (FSD), ADR-0002 (routing), ADR-0003 (state), ADR-0004 (testing).
 - **Entity search** (`.scratch/entity-search/PRD.md`) — the companion feature
   that replaces the high-cardinality user/client/role selects with server-backed

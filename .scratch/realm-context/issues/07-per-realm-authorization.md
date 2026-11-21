@@ -1,6 +1,6 @@
 # 07 — Per-realm authorization (decision)
 
-- **Status:** Decision required
+- **Status:** Done
 - **Depends on:** 04
 - **Blocks:** —
 
@@ -33,3 +33,17 @@ This issue records the decision; it is not implementation work in this feature.
 ## Out of scope
 
 The implementation of per-realm authorization.
+
+## Outcome
+
+**Option 1 — keep global admin — was chosen.** The decision is recorded in
+[ADR-0006](../../../docs/adr/0006-per-realm-authorization.md), which explains why
+the realm-first UI is a navigation and request-scoping context rather than a
+permission boundary.
+
+- ADR-0005 keeps the explicit "not a security boundary" note and now points to
+  ADR-0006 in its *Not in scope* section.
+- `README.md` states the limitation in the Authorization section.
+- `CONTEXT.md` already defines the Active realm the same way.
+- No server, claims or middleware change is made here. Option 2 (realm-scoped
+  admin roles) would be a separate feature with its own ADR.

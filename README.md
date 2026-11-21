@@ -83,7 +83,10 @@ future integration tests; `src/mocks/handlers.test.ts` is the usage pattern.
   login form.
 - **Authorization:** the admin API requires `realm_access.roles` to contain
   `admin`. Data-mode route loaders redirect to `/login` or `/forbidden` before a
-  protected screen renders.
+  protected screen renders. This is a **global** admin role: the active realm
+  (ADR-0005) scopes navigation and requests for usability, but it is **not a
+  security boundary**. Any operator with the admin role can act on any realm
+  through the API. See [ADR-0006](docs/adr/0006-per-realm-authorization.md).
 - **State:** Redux Toolkit is the single source of truth for session and server
   data. RTK Query and other external data layers are intentionally not used.
   Loaders dispatch fetch actions; slices own loading, error and applied
