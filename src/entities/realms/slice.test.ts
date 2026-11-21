@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { fetchRealmById, fetchRealms, realmsReducer } from "./slice";
+import {
+  fetchRealmById,
+  fetchRealmOptions,
+  fetchRealms,
+  realmsReducer,
+} from "./slice";
 
 const realm = (id: string, name: string) => ({
   id,
@@ -102,5 +107,23 @@ describe("realmsReducer", () => {
 
     expect(state.detail?.name).toBe("web");
     expect(state.detailStatus).toBe("succeeded");
+  });
+
+  it("stores the realm options catalog", () => {
+    const pending = {
+      type: fetchRealmOptions.pending.type,
+      meta: { requestId: "a" },
+    };
+    const loading = realmsReducer(undefined, pending);
+    const fulfilled = {
+      type: fetchRealmOptions.fulfilled.type,
+      meta: { requestId: "a" },
+      payload: [{ id: "1", name: "admin" }],
+    };
+
+    const state = realmsReducer(loading, fulfilled);
+
+    expect(state.options).toEqual([{ id: "1", name: "admin" }]);
+    expect(state.optionsStatus).toBe("succeeded");
   });
 });

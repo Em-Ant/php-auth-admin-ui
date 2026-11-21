@@ -1,5 +1,6 @@
 import { combineSlices } from "@reduxjs/toolkit";
 import { operatorReducer } from "@/app/model/operator";
+import { realmReducer } from "@/app/model/realm";
 import { themeReducer } from "@/app/model/theme";
 import { auditLogsReducer } from "@/entities/audit-logs";
 import { clientsReducer } from "@/entities/clients";
@@ -12,6 +13,7 @@ import { usersReducer } from "@/entities/users";
 
 const rootReducer = combineSlices({
   operator: operatorReducer,
+  realm: realmReducer,
   theme: themeReducer,
   realms: realmsReducer,
   clients: clientsReducer,

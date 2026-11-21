@@ -36,6 +36,12 @@ export const selectRealmDetailStatus = (state: StateWithRealms) =>
 export const selectRealmDetailError = (state: StateWithRealms) =>
   state.realms.detailError;
 
+export const selectRealmOptions = (state: StateWithRealms) =>
+  state.realms.options;
+
+export const selectRealmOptionsStatus = (state: StateWithRealms) =>
+  state.realms.optionsStatus;
+
 const selectRealmsMutationStatus = (state: StateWithRealms) =>
   state.realms.mutationStatus;
 const selectRealmsMutationError = (state: StateWithRealms) =>

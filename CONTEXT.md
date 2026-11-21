@@ -48,6 +48,10 @@ _Avoid_: Audit event, history row
 The person using this dashboard, authenticated in the admin realm with the admin role. Distinct from the Users being administered.
 _Avoid_: Admin user, viewer
 
+**Active realm**:
+The realm the operator is currently working in, held for the session and shown in the shell. It scopes navigation and reads; it is a UI context, not a security boundary — authorization stays global.
+_Avoid_: Current realm, selected realm, tenant
+
 ### Actions
 
 **Deactivate**:

@@ -21,7 +21,7 @@ vi.mock("@/shared/auth", () => ({
   forceTokenRefresh: async () => undefined,
 }));
 
-import { createRealm, deleteRealm, listRealms } from "./api";
+import { createRealm, deleteRealm, listRealmOptions, listRealms } from "./api";
 
 /**
  * The client against the MSW mock: proves the entity API and the mock agree
@@ -37,6 +37,16 @@ describe("realms api", () => {
 
     expect(envelope.items).toHaveLength(1);
     expect(envelope).toMatchObject({ total: 2, limit: 1, offset: 0 });
+  });
+
+  it("lists every realm option as {id, name}, sorted by name", async () => {
+    const { items, total } = await listRealmOptions();
+
+    expect(total).toBe(2);
+    expect(items).toEqual([
+      { id: "22222222-2222-2222-2222-222222222222", name: "admin" },
+      { id: "11111111-1111-1111-1111-111111111111", name: "test" },
+    ]);
   });
 
   it("creates and deletes a realm", async () => {

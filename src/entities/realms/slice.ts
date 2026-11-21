@@ -3,13 +3,14 @@ import {
   createSlice,
   type PayloadAction,
 } from "@reduxjs/toolkit";
-import type { ListEnvelope, Realm } from "@/shared/api/contract";
+import type { ListEnvelope, Realm, RealmOption } from "@/shared/api/contract";
 import {
   type CreateRealmInput,
   createKeys,
   createRealm,
   deleteRealm,
   getRealm,
+  listRealmOptions,
   listRealms,
   type RealmsApiError,
   type RealmsListParams,
@@ -33,6 +34,9 @@ export interface RealmsState {
   detail: Realm | null;
   detailStatus: RequestStatus;
   detailError: RealmsApiError | null;
+  /** Full `{ id, name }` catalog, unpaginated; drives default resolution. */
+  options: RealmOption[];
+  optionsStatus: RequestStatus;
   mutationStatus: "idle" | "saving" | "succeeded" | "failed";
   mutationError: RealmsApiError | null;
 }
@@ -48,6 +52,8 @@ const initialState: RealmsState = {
   detail: null,
   detailStatus: "idle",
   detailError: null,
+  options: [],
+  optionsStatus: "idle",
   mutationStatus: "idle",
   mutationError: null,
 };
@@ -76,6 +82,18 @@ export const fetchRealmById = createAsyncThunk<
 >("realms/fetchOne", async (id, { rejectWithValue }) => {
   try {
     return await getRealm(id);
+  } catch (error) {
+    return rejectWithValue(toError(error));
+  }
+});
+
+export const fetchRealmOptions = createAsyncThunk<
+  RealmOption[],
+  void,
+  { rejectValue: RealmsApiError }
+>("realms/fetchOptions", async (_, { rejectWithValue }) => {
+  try {
+    return (await listRealmOptions()).items;
   } catch (error) {
     return rejectWithValue(toError(error));
   }
@@ -186,6 +204,16 @@ export const realmsSlice = createSlice({
           status: null,
           message: action.error.message ?? "unknown error",
         };
+      })
+      .addCase(fetchRealmOptions.pending, (state) => {
+        state.optionsStatus = "loading";
+      })
+      .addCase(fetchRealmOptions.fulfilled, (state, action) => {
+        state.options = action.payload;
+        state.optionsStatus = "succeeded";
+      })
+      .addCase(fetchRealmOptions.rejected, (state) => {
+        state.optionsStatus = "failed";
       })
       .addCase(createRealmThunk.pending, (state) => {
         state.mutationStatus = "saving";

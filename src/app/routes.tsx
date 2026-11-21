@@ -10,7 +10,11 @@ import {
   fetchOfflineSessionById,
   fetchOfflineSessions,
 } from "@/entities/offline-sessions";
-import { fetchRealmById, fetchRealms } from "@/entities/realms";
+import {
+  fetchRealmById,
+  fetchRealmOptions,
+  fetchRealms,
+} from "@/entities/realms";
 import { fetchRoleById, fetchRoles } from "@/entities/roles";
 import { fetchSessions } from "@/entities/sessions";
 import { fetchUserById, fetchUserRoles, fetchUsers } from "@/entities/users";
@@ -93,6 +97,9 @@ const createRealmsListLoader =
     store.dispatch(
       fetchRealms(readRealmsListParams(new URL(request.url).searchParams)),
     );
+    // The catalog is the source of truth for the active realm's default
+    // resolution (see app/model/realm listener).
+    store.dispatch(fetchRealmOptions());
     return null;
   };
 

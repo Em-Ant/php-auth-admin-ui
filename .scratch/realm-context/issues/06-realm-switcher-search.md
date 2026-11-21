@@ -1,37 +1,32 @@
-# 06 — Realm switcher search and catalog limit
+# 06 — Realm switcher search
 
 - **Status:** Todo
-- **Depends on:** —
+- **Depends on:** 01 (options catalog), 03 (switcher in the shell)
 - **Blocks:** —
 
 ## Context
 
-Dropdown options are preloaded at `CATALOG_LIMIT = 200`
-(`src/app/routes.tsx`), and the server caps `limit` at 200
-(`ValidatesAdminInput::paginationFromQuery`, values over the cap fall back to
-50). Today that affects every realm/client/user filter. After realm scoping
-(issue 05) the realm switcher is the only screen that still needs the full realm
-list, so this is where the ceiling matters.
-
+Default resolution and the realm switcher read the full
+`GET /admin/realms/options` catalog (issue 01), so the 200-row `limit` cap no
+longer truncates the options. This issue is only the *search* affordance on top:
 `UsersController` and `ClientsController` already accept `q`; `RealmsController`
-and `RolesController` do not.
+and `RolesController` do not. The paginated `GET /admin/realms` list is what the
+Realms table shows, so `q` narrows the table (and any future server-backed realm
+picker) without touching the options catalog.
 
 ## Scope
 
 - **Server:** add a `q` search to `GET /admin/realms`, mirroring
   `UsersController::list` and `ClientsController::list` — bind the escaped
   prefix through `searchTerm`, extend `RealmRepository::searchAll` with the
-  optional term, order and page unchanged.
-- **Frontend:** add a search input to the Realms page (the switcher) that
-  round-trips through the URL search params, matching the existing `q` pattern on
-  users/clients.
-- Optional, only if realms can realistically exceed 200: a lightweight
-  `GET /admin/realms/options` returning all `{ id, name }` for the switcher.
+  optional term, order and page unchanged. (See `REALM-CONTEXT-SERVER-PLAN.md`.)
+- **Frontend:** add a search input to the Realms page that round-trips through
+  the URL search params, matching the existing `q` pattern on users/clients.
 
 ## Acceptance criteria
 
-- Searching realms narrows the table/switcher server-side; clearing it restores
-  the full page.
+- Searching realms narrows the table server-side; clearing it restores the full
+  page.
 - No client-side truncation of the realm list beyond what the user asked for.
 - Empty-search behaviour matches the users/clients screens.
 

@@ -4,6 +4,7 @@ import {
   ADMIN_API_PREFIX,
   type ListEnvelope,
   type Realm,
+  type RealmOptions,
 } from "@/shared/api/contract";
 import { join } from "@/shared/lib";
 
@@ -39,6 +40,12 @@ export const listRealms = (params: RealmsListParams) =>
         `/realms?limit=${params.limit}&offset=${params.offset}`,
       ]),
     ),
+  );
+
+/** Every realm as `{ id, name }`, unpaginated — for pickers and resolution. */
+export const listRealmOptions = () =>
+  request<RealmOptions>(
+    appApiClient.get<RealmOptions>(join([ADMIN_API_PREFIX, "/realms/options"])),
   );
 
 export const getRealm = (id: string) =>
