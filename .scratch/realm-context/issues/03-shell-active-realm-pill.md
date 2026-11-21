@@ -1,6 +1,6 @@
 # 03 — Shell active-realm pill
 
-- **Status:** Todo
+- **Status:** Done
 - **Depends on:** 01
 - **Blocks:** —
 
@@ -18,7 +18,10 @@ The active realm must be visible on every screen, not only on the Realms page.
 - Before the default is resolved, render a neutral placeholder (e.g. a muted
   `…`), never an empty box that shifts layout.
 - In the collapsed (icon) sidebar, expose the realm name through the button
-  `tooltip` and an `aria-label` so it is not lost.
+  `tooltip` and an `aria-label` so it is not lost: `tooltip="Admin UI — <realm>"`
+  and `aria-label="Admin UI, active realm <realm>"`.
+- The pill is always rendered; before the realm resolves its text is a muted
+  `…`, so the header height never shifts between first paint and resolution.
 
 ## Acceptance criteria
 

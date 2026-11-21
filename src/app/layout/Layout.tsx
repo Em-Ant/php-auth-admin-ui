@@ -1,5 +1,5 @@
-import { ChevronsUpDown, LogOut, ShieldCheck } from "lucide-react";
-
+import { cn } from "cn";
+import { ChevronsUpDown, Globe, LogOut, ShieldCheck } from "lucide-react";
 import { useCallback } from "react";
 import { Link, Outlet, useLocation } from "react-router";
 import {
@@ -16,7 +16,7 @@ import {
 import { useTheme } from "@/app/model/theme";
 import { useAppDispatch, useAppSelector } from "@/shared/lib";
 import { Avatar, AvatarFallback } from "@/shared/ui/avatar";
-
+import { Badge } from "@/shared/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -81,16 +81,38 @@ export const Layout = () => {
           <SidebarHeader>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild size="lg" tooltip="Admin UI">
+                <SidebarMenuButton
+                  asChild
+                  size="lg"
+                  tooltip={
+                    activeRealmName === null
+                      ? "Admin UI"
+                      : `Admin UI — ${activeRealmName}`
+                  }
+                  aria-label={
+                    activeRealmName === null
+                      ? "Admin UI"
+                      : `Admin UI, active realm ${activeRealmName}`
+                  }
+                >
                   <Link to="/overview">
                     <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                       <ShieldCheck className="size-4" />
                     </div>
                     <div className="grid flex-1 text-left text-sm leading-tight">
                       <span className="truncate font-medium">Admin UI</span>
-                      <span className="truncate text-xs text-muted-foreground">
-                        php-auth dashboard
-                      </span>
+                      <Badge
+                        variant="secondary"
+                        className={cn(
+                          "mt-0.5 w-fit max-w-full gap-1",
+                          activeRealmName === null && "text-muted-foreground",
+                        )}
+                      >
+                        <Globe />
+                        <span className="truncate">
+                          {activeRealmName ?? "…"}
+                        </span>
+                      </Badge>
                     </div>
                   </Link>
                 </SidebarMenuButton>

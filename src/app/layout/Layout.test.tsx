@@ -1,7 +1,9 @@
-import { screen } from "@testing-library/react";
+import { act, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Route, Routes } from "react-router";
 import { describe, expect, it } from "vitest";
+import { setActiveRealm } from "@/app/model/realm";
+import { createAppStore } from "@/app/store/store";
 import { renderWithProviders } from "@/test/render";
 import { Layout } from "./Layout";
 
@@ -47,5 +49,33 @@ describe("Layout dark mode", () => {
 
     await user.click(toggle);
     expect(document.documentElement).toHaveClass("dark");
+  });
+});
+
+describe("Layout active realm pill", () => {
+  it("shows the active realm and updates when it changes", () => {
+    const store = createAppStore();
+    renderWithProviders(
+      <Routes>
+        <Route path="/" element={<Layout />}>
+          <Route path="overview" element={<p>overview content</p>} />
+        </Route>
+      </Routes>,
+      { store, route: "/overview" },
+    );
+
+    // Neutral placeholder before the default realm resolves.
+    expect(screen.getByText("…")).toBeInTheDocument();
+
+    act(() => {
+      store.dispatch(setActiveRealm({ id: "1", name: "admin" }));
+    });
+    expect(screen.getByText("admin")).toBeInTheDocument();
+
+    act(() => {
+      store.dispatch(setActiveRealm({ id: "2", name: "web" }));
+    });
+    expect(screen.getByText("web")).toBeInTheDocument();
+    expect(screen.queryByText("admin")).toBeNull();
   });
 });
