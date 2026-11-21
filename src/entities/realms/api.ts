@@ -28,19 +28,25 @@ const request = async <T>(call: Promise<Result<T, ResponseFailure>>) =>
   );
 
 export interface RealmsListParams {
+  q?: string;
   limit: number;
   offset: number;
 }
 
-export const listRealms = (params: RealmsListParams) =>
-  request<ListEnvelope<Realm>>(
+export const listRealms = (params: RealmsListParams) => {
+  const query = new URLSearchParams({
+    limit: String(params.limit),
+    offset: String(params.offset),
+  });
+  if (params.q) {
+    query.set("q", params.q);
+  }
+  return request<ListEnvelope<Realm>>(
     appApiClient.get<ListEnvelope<Realm>>(
-      join([
-        ADMIN_API_PREFIX,
-        `/realms?limit=${params.limit}&offset=${params.offset}`,
-      ]),
+      join([ADMIN_API_PREFIX, `/realms?${query.toString()}`]),
     ),
   );
+};
 
 /** Every realm as `{ id, name }`, unpaginated — for pickers and resolution. */
 export const listRealmOptions = () =>

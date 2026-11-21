@@ -13,6 +13,7 @@ import { useAppDispatch, useAppSelector } from "@/shared/lib";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent } from "@/shared/ui/card";
+import { Input } from "@/shared/ui/input";
 import { Skeleton } from "@/shared/ui/skeleton";
 import {
   Table,
@@ -45,6 +46,20 @@ export const Realms = () => {
   const status = useAppSelector(selectRealmsListStatus);
   const error = useAppSelector(selectRealmsListError);
   const [createOpen, setCreateOpen] = useState(false);
+  const [query, setQuery] = useState(params.q ?? "");
+
+  const updateParams = (patch: Record<string, string | undefined>) => {
+    const next = new URLSearchParams(searchParams);
+    for (const [key, value] of Object.entries(patch)) {
+      if (value === undefined || value === "") {
+        next.delete(key);
+      } else {
+        next.set(key, value);
+      }
+    }
+    next.set("offset", "0");
+    void setSearchParams(next);
+  };
 
   const goToOffset = (offset: number) => {
     const next = new URLSearchParams(searchParams);
@@ -72,6 +87,31 @@ export const Realms = () => {
           <Plus />
           Create realm
         </Button>
+      </div>
+      <div className="flex flex-wrap items-end gap-3">
+        <form
+          className="flex items-end gap-2"
+          onSubmit={(event) => {
+            event.preventDefault();
+            updateParams({ q: query || undefined });
+          }}
+        >
+          <div className="grid gap-1.5">
+            <label htmlFor="realms-q" className="text-sm font-medium">
+              Search
+            </label>
+            <Input
+              id="realms-q"
+              value={query}
+              placeholder="Name prefix..."
+              onChange={(event) => setQuery(event.target.value)}
+              className="w-64"
+            />
+          </div>
+          <Button type="submit" variant="outline">
+            Search
+          </Button>
+        </form>
       </div>
       {status === "loading" && items.length === 0 ? <RealmsSkeleton /> : null}
       {status === "failed" ? (

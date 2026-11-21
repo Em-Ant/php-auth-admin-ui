@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Provider } from "react-redux";
 import { createMemoryRouter, RouterProvider } from "react-router";
@@ -72,6 +72,30 @@ describe("realms flow", () => {
 
     expect(await screen.findByText("Showing 2–2 of 2")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "test" })).toBeInTheDocument();
+  });
+
+  it("searches realms by name through the URL", async () => {
+    const user = userEvent.setup();
+    const router = renderAt("/realms");
+
+    await screen.findByRole("link", { name: "test" });
+    await user.type(screen.getByLabelText("Search"), "adm");
+    await user.click(screen.getByRole("button", { name: "Search" }));
+
+    await waitFor(() =>
+      expect(screen.queryByRole("link", { name: "test" })).toBeNull(),
+    );
+    expect(screen.getByRole("link", { name: "admin" })).toBeInTheDocument();
+    expect(new URLSearchParams(router.state.location.search).get("q")).toBe(
+      "adm",
+    );
+
+    await user.clear(screen.getByLabelText("Search"));
+    await user.click(screen.getByRole("button", { name: "Search" }));
+
+    expect(
+      await screen.findByRole("link", { name: "test" }),
+    ).toBeInTheDocument();
   });
 
   it("activates a realm and stays on the page", async () => {

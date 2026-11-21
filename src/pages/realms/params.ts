@@ -1,6 +1,7 @@
 import { DEFAULT_PAGE_SIZE } from "@/entities/realms";
 
 export interface RealmsListPageParams {
+  q?: string;
   limit: number;
   offset: number;
 }
@@ -23,12 +24,16 @@ const readBoundedInt = (
 };
 
 /**
- * Pagination intent lives in the URL (ADR-0002). Mirrors the backend rules:
- * `limit` defaults when out of range, `offset` floors at zero.
+ * Pagination and search intent live in the URL (ADR-0002). Mirrors the backend
+ * rules: `limit` defaults when out of range, `offset` floors at zero.
  */
 export const readRealmsListParams = (
   searchParams: URLSearchParams,
-): RealmsListPageParams => ({
-  limit: readBoundedInt(searchParams.get("limit"), DEFAULT_PAGE_SIZE, 1, 200),
-  offset: readBoundedInt(searchParams.get("offset"), 0, 0),
-});
+): RealmsListPageParams => {
+  const q = searchParams.get("q") ?? undefined;
+  return {
+    ...(q ? { q } : {}),
+    limit: readBoundedInt(searchParams.get("limit"), DEFAULT_PAGE_SIZE, 1, 200),
+    offset: readBoundedInt(searchParams.get("offset"), 0, 0),
+  };
+};

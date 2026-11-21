@@ -39,6 +39,13 @@ describe("realms api", () => {
     expect(envelope).toMatchObject({ total: 2, limit: 1, offset: 0 });
   });
 
+  it("forwards q as a name-prefix search", async () => {
+    const envelope = await listRealms({ q: "adm", limit: 50, offset: 0 });
+
+    expect(envelope.items.map((realm) => realm.name)).toEqual(["admin"]);
+    expect(envelope.total).toBe(1);
+  });
+
   it("lists every realm option as {id, name}, sorted by name", async () => {
     const { items, total } = await listRealmOptions();
 

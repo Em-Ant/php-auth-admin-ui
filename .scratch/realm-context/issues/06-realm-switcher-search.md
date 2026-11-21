@@ -1,6 +1,6 @@
 # 06 — Realm switcher search
 
-- **Status:** Todo
+- **Status:** Done
 - **Depends on:** 01 (options catalog), 03 (switcher in the shell)
 - **Blocks:** —
 
@@ -19,7 +19,9 @@ picker) without touching the options catalog.
 - **Server:** add a `q` search to `GET /admin/realms`, mirroring
   `UsersController::list` and `ClientsController::list` — bind the escaped
   prefix through `searchTerm`, extend `RealmRepository::searchAll` with the
-  optional term, order and page unchanged. (See `REALM-CONTEXT-SERVER-PLAN.md`.)
+  optional term, order and page unchanged. (See
+  `php_auth_server/REALM-CONTEXT-SERVER-PLAN.md` — that repository owns the PHP
+  change.)
 - **Frontend:** add a search input to the Realms page that round-trips through
   the URL search params, matching the existing `q` pattern on users/clients.
 
@@ -39,3 +41,22 @@ picker) without touching the options catalog.
 ## Out of scope
 
 Adding search to roles or the other catalogs (separate follow-up if needed).
+
+## Notes
+
+- **The frontend already sent the search through the URL.** The missing link
+  was the realms API client: `listRealms` built its query from `limit`/`offset`
+  only, so `q` never reached the server. `RealmsListParams` now carries `q` and
+  `listRealms` forwards it; the MSW handler already matched it by escaped
+  prefix (`matchesPrefixQuery`).
+- **Search resets paging.** Submitting the form patches `q` and sets
+  `offset=0`, so a narrower result set starts on page one; clearing the input
+  removes `q` and restores the full first page.
+- **The PHP side is a separate repository.** `RealmsController::list` and
+  `RealmRepository::searchAll` still need the `q` term in `php_auth_server`
+  (tracked as item 1 of its `REALM-CONTEXT-SERVER-PLAN.md`). Nothing in this
+  repository calls an unimplemented shape — the mock defines the contract.
+- **Tests:** `src/entities/realms/api.test.ts` asserts `q` is forwarded and
+  narrows to `admin`; `src/pages/realms/Realms.test.tsx` types a query, asserts
+  the URL and visible rows, then clears it. `src/mocks/handlers.test.ts`
+  already covers prefix-only (not substring) matching.
